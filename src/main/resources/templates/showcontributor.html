@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="skeleton::head"></head>
+<body>
+	<div th:replace="skeleton::jumbotron"></div>
+	<div th:replace="skeleton::nav"></div>
+	<div class="container">
+		<div class="row">
+			<span class="h3">
+				Contributor <a href="#" th:text="${contributor.name}"></a>
+				<a th:if="${me.isAdmin()} == true" th:href="@{/account/{id}(id=${contributor.name})}" class="btn btn-primary fa fa-edit">&nbsp;Edit</a>
+			</span>
+		</div>
+	</div>
+	
+	<div class="row">&nbsp;</div>
+	
+	<div class="container">
+		<div class="row">
+			<div class="col-md-11 top-margin">
+				<div>
+					<ul class="timeline">
+						<li th:each="contrib : ${contributions}"><i
+							class="fa fa-edit bg-blue"></i>
+							<div class="timeline-item">
+								<span class="time"
+									th:text="${#calendars.format(contrib.created,'dd. MMMM yyyy, hh:mm:ss')}"><i
+									class="fa fa-clock-o"></i>DATE</span>
+								<h3 class="timeline-header">
+									<a
+										th:href="@{/contributor/{id}(id=${contrib.contributor.name})}"
+										th:text="${contrib.contributor.name}">USER</a>
+									&nbsp;contributed to&nbsp; <a
+										th:href="@{/issue/{id}(id=${contrib.issue.id})}"
+										th:text="'#' + ${contrib.issue.id} + ' ' + ${contrib.issue.title}">ISSUE</a>
+								</h3>
+								<div class="timeline-body" th:utext="${contrib.content}">CONTENT</div>
+							</div></li>
+						<li><i class="fa fa-clock-o"></i></li>
+					</ul>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

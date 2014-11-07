@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+
+<html xmlns:th="http://www.thymeleaf.org"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="skeleton::head"></head>
+<body>
+	<div th:replace="skeleton::jumbotron"></div>
+	<div th:replace="skeleton::nav"></div>
+
+	<div class=" container-fluid">
+		<table class="table table-striped">
+			<thead>
+				<tr>
+					<th>Issue</th>
+					<th>Latest activity</th>
+					<th>Deadline</th>
+					<th>State</th>
+					<th></th>
+				</tr>
+			</thead>
+
+			<tbody>
+				<tr th:each="issue: ${issues}">
+					<td><a th:text="${'#'+issue.id+' '+issue.title}"
+						th:href="@{/issue/{id}}(id=${issue.id})">Issue</a></td>
+					<td th:text="${issue.lastChange}">Latest activity</td>
+					<td th:text="${issue.deadline}">Deadline</td>
+					<td><span th:text="${issue.isOpen()} ? 'open' : 'closed'"
+						th:attr="class=${issue.isOpen() ? 'btn btn-success' : 'btn btn-danger'}">State</span></td>
+				</tr>
+			</tbody>
+		</table>
+
+	</div>
+</body>
+</html>
