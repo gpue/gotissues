@@ -15,7 +15,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.util.Assert;
@@ -36,9 +36,11 @@ import de.gpue.gotissues.util.MailUtil;
 @RestController
 @RequestMapping(value = "/api")
 public class GotIssuesRestController {
+	private static final String WATCHED = "watched@";
 	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat(
 			"dd.MM.yyyy");
 	private static final int PAGE_SIZE = 20;
+	private static final String ASSIGNED = "assigned@";
 
 	@Autowired
 	private IssueRepository issues;
@@ -53,19 +55,42 @@ public class GotIssuesRestController {
 
 	@RequestMapping("/issues")
 	public List<Issue> getIssues(
-			@RequestParam(value = "page", required = false) Integer page,
+			@RequestParam(value = "page", required= false) Integer page,
 			@RequestParam(value = "search", defaultValue = "") String search) {
+		List<Issue> il = getIssues(search != null ? search : "");
+		return page == null ? il : il.subList(PAGE_SIZE*(page-1), Math.min(il.size(),PAGE_SIZE*page));
+	}
+
+	@Cacheable("default")
+	private List<Issue> getIssues(String search) {
 
 		Set<Issue> found = new HashSet<Issue>();
 
-		if (page == null)
+		String searchArr[] = search.split("\\s");
+
+		for (String s : searchArr) {
 			found.addAll(issues.findByTitleContainingOrDescriptionContaining(
-					search != null ? search : "", search != null ? search : ""));
-		else {
-			issues.findByTitleContainingOrDescriptionContaining(
-					search != null ? search : "", search != null ? search : "",
-					new PageRequest(page, PAGE_SIZE))
-					.forEach(i -> found.add(i));
+					search, search));
+			contributions.findByContentContaining(s).forEach(
+					c -> found.add(c.getIssue()));
+
+			if (s.startsWith(WATCHED)) {
+				String cn = s.substring(WATCHED
+						.length());
+				Contributor c = cn.length()==0 ? getMe() : contributors.findOne(cn);
+				if (c != null)
+					found.addAll(issues.findByWatchers(c));
+			} else if (s.startsWith(ASSIGNED)) {
+				String cn = s.substring(ASSIGNED
+						.length());
+				Contributor c = cn.length()==0 ? getMe() : contributors.findOne(cn);
+				if (c != null)
+					found.addAll(issues.findByWatchers(c));
+			} else {
+				Contributor c = contributors.findOne(s);
+				contributions.findByContributorOrderByCreatedDesc(c).forEach(
+						ct -> found.add(ct.getIssue()));
+			}
 		}
 
 		List<Issue> result = new ArrayList<Issue>(found);
@@ -78,6 +103,19 @@ public class GotIssuesRestController {
 
 		});
 
+		return orderChildren(result);
+	}
+	
+	private List<Issue> orderChildren(List<Issue> todo){
+		List<Issue> result = new LinkedList<>();
+		
+		while(!todo.isEmpty()){
+			Issue head = todo.remove(0);
+			result.add(head);
+			List<Issue> children = issues.findByParentOrderByLastChangedDesc(head);
+			todo.addAll(0, children);
+		}
+		
 		return result;
 	}
 
@@ -102,7 +140,7 @@ public class GotIssuesRestController {
 		if (deadline != null)
 			i.setDeadline(DATE_FORMAT.parse(deadline));
 		if (assignees != null) {
-			i.setAssignees(new LinkedList<>());
+			i.setAssignees(new HashSet<>());
 			assignees.forEach(a -> i.getAssignees()
 					.add(contributors.findOne(a)));
 		}
@@ -135,7 +173,7 @@ public class GotIssuesRestController {
 		if (description != null)
 			i.setDescription(description);
 		if (assignees != null) {
-			i.setAssignees(new LinkedList<>());
+			i.setAssignees(new HashSet<>());
 			assignees.forEach(a -> i.getAssignees()
 					.add(contributors.findOne(a)));
 		}
@@ -187,13 +225,13 @@ public class GotIssuesRestController {
 	public Issue closeIssue(@PathVariable("i") Long id) {
 		Issue i = issues.findOne(id);
 
-		Assert.isTrue(i.isOpen(), "Issue is closed!");
+		contribute("<h4>Issue closed.</h4>", id, getMe().getName(), false, 1);
 
 		i.setOpen(false);
 
 		issues.save(i);
 
-		contribute("<h4>Issue closed.</h4>", id, getMe().getName(), false, 1);
+		issues.findByParentOrderByLastChangedDesc(i).forEach(ic -> closeIssue(ic.getId()));
 
 		return i;
 	}
@@ -203,13 +241,11 @@ public class GotIssuesRestController {
 	public Issue openIssue(@PathVariable("i") Long id) {
 		Issue i = issues.findOne(id);
 
-		Assert.isTrue(!i.isOpen(), "Issue is open!");
-
 		i.setOpen(true);
 
 		issues.save(i);
 
-		contribute("<h4>Issue re-opend.</h4>", id, getMe().getName(), false, 1);
+		contribute("<h4>Issue re-opened.</h4>", id, getMe().getName(), false, 1);
 
 		return i;
 	}
@@ -219,7 +255,7 @@ public class GotIssuesRestController {
 		Issue i = issues.findOne(id);
 
 		if (i.getWatchers() == null)
-			i.setWatchers(new LinkedList<Contributor>());
+			i.setWatchers(new HashSet<Contributor>());
 		i.getWatchers().add(getMe());
 
 		issues.save(i);
@@ -232,7 +268,7 @@ public class GotIssuesRestController {
 		Issue i = issues.findOne(id);
 
 		if (i.getWatchers() == null)
-			i.setWatchers(new LinkedList<Contributor>());
+			i.setWatchers(new HashSet<Contributor>());
 		i.getWatchers().remove(getMe());
 
 		issues.save(i);
@@ -393,11 +429,14 @@ public class GotIssuesRestController {
 
 	@RequestMapping(value = "/contributors:add", method = { RequestMethod.GET,
 			RequestMethod.POST })
-	public Contributor addContributor(@RequestParam("username") String name,
+	public Contributor addContributor(
+			@RequestParam("username") String name,
+			@RequestParam(value = "fullname", required = false) String fullname,
 			@RequestParam("password") String password,
 			@RequestParam("mail") String mail) {
 
-		Contributor c = new Contributor(name, mail, encoder.encode(password));
+		Contributor c = new Contributor(name, fullname, mail,
+				encoder.encode(password));
 
 		contributors.save(c);
 
@@ -406,9 +445,10 @@ public class GotIssuesRestController {
 
 	@RequestMapping(value = "/contributors/{c}:alter", method = {
 			RequestMethod.GET, RequestMethod.POST })
-	public Contributor addContributor(
+	public Contributor alterContributor(
 			@PathVariable("c") String c,
 			@RequestParam(value = "name", required = false) String name,
+			@RequestParam(value = "fullname", required = false) String fullname,
 			@RequestParam(value = "password", required = false) String password,
 			@RequestParam(value = "mail", required = false) String mail) {
 
@@ -420,6 +460,8 @@ public class GotIssuesRestController {
 			co.setPassword(encoder.encode(password));
 		if (mail != null)
 			co.setMail(mail);
+		if (fullname != null)
+			co.setFullName(fullname);
 
 		co = contributors.save(co);
 

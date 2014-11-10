@@ -8,7 +8,7 @@
 	<div class="container">
 		<div class="row">
 			<span class="h3">
-				Contributor <a href="#" th:text="${contributor.name}"></a>
+				Contributor <a href="#" th:text="${contributor.name}"></a><span th:if="${contributor.fullName}!=null" th:text="' ('+${contributor.fullName}+')'">NAME</span>
 				<a th:if="${me.isAdmin()} == true" th:href="@{/account/{id}(id=${contributor.name})}" class="btn btn-primary fa fa-edit">&nbsp;Edit</a>
 			</span>
 		</div>

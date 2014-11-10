@@ -41,15 +41,17 @@ public class GotIssuesController implements ErrorController {
 	public String account(@PathVariable("u") String name, Model model) {
 		return skeleton("/account", model);
 	}
-	
+
 	@RequestMapping("/issue/{parent}/createissue")
-	public String createissue(@PathVariable("parent") Long parent,Model model) {
+	public String createissue(@PathVariable("parent") Long parent, Model model) {
 		model.addAttribute("parent", service.getIssue(parent));
+		model.addAttribute("contributors", service.getContributors());
 		return skeleton("/createissue", model);
 	}
 
 	@RequestMapping("/createissue")
 	public String createissue(Model model) {
+		model.addAttribute("contributors", service.getContributors());
 		return skeleton("/createissue", model);
 	}
 
@@ -59,23 +61,27 @@ public class GotIssuesController implements ErrorController {
 	}
 
 	@RequestMapping("/issuelist")
-	public String issuelist(Model model) {
-		model.addAttribute("issues", service.getIssues(null, null));
+	public String issuelist(
+			@RequestParam(value = "search", required = false) String search,
+			@RequestParam(value = "page", required = false) Integer page,
+			Model model) {
+		model.addAttribute("issues", service.getIssues(page, search));
 		return skeleton("/issuelist", model);
 	}
-	
+
 	@RequestMapping("/issue/{id}")
-	public String showIssue(@PathVariable("id") Long id,Model model) {
+	public String showIssue(@PathVariable("id") Long id, Model model) {
 		model.addAttribute("issue", service.getIssue(id));
 		model.addAttribute("contributions", service.getContributionsByIssue(id));
 		model.addAttribute("contributors", service.getContributors());
-		return skeleton("/showissue", model);		
+		return skeleton("/showissue", model);
 	}
 
 	@RequestMapping("/contributor/{c}")
-	public String showContributor(@PathVariable("c") String c,Model model) {
+	public String showContributor(@PathVariable("c") String c, Model model) {
 		model.addAttribute("contributor", service.getContributor(c));
-		model.addAttribute("contributions", service.getContributionsByContributor(c));
+		model.addAttribute("contributions",
+				service.getContributionsByContributor(c));
 		return skeleton("/showcontributor", model);
 	}
 

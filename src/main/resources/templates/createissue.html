@@ -7,7 +7,7 @@
 	<div th:replace="skeleton::jumbotron"></div>
 	<div th:replace="skeleton::nav"></div>
 
-	<div class="container">
+	<div class="container col-md-7 col-md-offset-2">
 		<form class="form-horizontal" role="form" action="issuelist"
 			method="post" data-parsley-validate="true" id="issueform">
 			<div th:if="${parent} != null" class="form-group">

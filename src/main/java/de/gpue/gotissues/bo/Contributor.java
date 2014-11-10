@@ -31,6 +31,7 @@ public class Contributor implements UserDetails {
 	private boolean enabled;
 	@NotNull
 	private String password;
+	private String fullName;
 	@Transient
 	private int assignedCount;
 	@Transient
@@ -57,7 +58,7 @@ public class Contributor implements UserDetails {
 	public Contributor() {
 	}
 
-	public Contributor(String name, String mail, String password) {
+	public Contributor(String name, String fullName, String mail, String password) {
 		this.name = name;
 		this.mail = mail;
 		this.enabled = true;
@@ -66,6 +67,15 @@ public class Contributor implements UserDetails {
 		this.deadlineRaisedCount = 0;
 		this.assignedCount = 0;
 		this.points = 0;
+		this.fullName = fullName;
+	}	
+
+	public String getFullName() {
+		return fullName;
+	}
+
+	public void setFullName(String fullName) {
+		this.fullName = fullName;
 	}
 
 	public boolean isAdmin() {

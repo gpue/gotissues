@@ -14,9 +14,24 @@
 				<div class="form-group">
 					<label for="title" class="col-sm-2 control-label"></label>
 					<div class="col-sm-10">
-						<h2>
-							Issue #<span th:text="${issue.id}">ID</span>
-						</h2>
+						<span class="h2 col-sm-3"> Issue #<span
+							th:text="${issue.id}">ID</span>
+						</span> <span class="col-sm-3" style="padding: 12px"> <span
+							style="display: none" id="close" class="h5">is open&nbsp;
+								<a class="btn btn-danger fa fa-close" href="javascript:close();">&nbsp;Close</a>
+						</span> <span class="h5" style="display: none" id="open">is
+								closed&nbsp; <a href="javascript:open();"
+								class="btn btn-success fa fa-check">&nbsp;Re-Open</a>
+						</span>
+						</span> <span class="col-sm-4" style="padding: 12px"> <span
+							style="display: none" id="watch" class="h5">not
+								watching&nbsp; <a class="btn btn-success fa fa-eye"
+								href="javascript:watch();">&nbsp;Watch</a>
+						</span> <span class="h5" style="display: none" id="unwatch">is
+								watched by you&nbsp; <a href="javascript:unwatch();"
+								class="btn btn-danger fa fa-check">&nbsp;Unwatch</a>
+						</span>
+						</span>
 					</div>
 				</div>
 
@@ -70,7 +85,7 @@
 				</div>
 				<div class="form-group">
 					<div class="col-sm-offset-2 col-sm-10">
-						<button class="btn btn-primary fa fa-check validate">&nbsp;Create</button>
+						<button class="btn btn-primary fa fa-save validate">&nbsp;Save</button>
 					</div>
 				</div>
 			</form>
@@ -81,10 +96,10 @@
 
 	<div class="container">
 		<div class="row">
-			<div class="col-md-11 top-margin">
+			<div class="col-md-9 col-md-offset-1 top-margin">
 				<div>
 					<ul class="timeline">
-						<li th:each="contrib : ${contributions}"><i
+						<li><i
 							class="fa fa-edit bg-green"></i>
 							<div class="timeline-item">
 								<h3 class="timeline-header">New contribution</h3>
@@ -92,6 +107,7 @@
 									<form class="form-horizontal" role="form" action="issuelist"
 										method="post" data-parsley-validate="true" id="issueform">
 										<div class="summernote"></div>
+										<br/>
 										<button class="btn btn-primary fa fa-check validate">&nbsp;Contribute</button>
 									</form>
 								</div>
@@ -103,8 +119,7 @@
 									th:text="${#calendars.format(contrib.created,'dd. MMMM yyyy, hh:mm:ss')}"><i
 									class="fa fa-clock-o"></i>DATE</span>
 								<h3 class="timeline-header">
-									<a
-										th:href="@{/contributor/{id}(id=${contrib.contributor.name})}"
+									<a	th:href="@{/contributor/{id}(id=${contrib.contributor.name})}"
 										th:text="${contrib.contributor.name}">USER</a>
 									&nbsp;contributed to&nbsp; <a
 										th:href="@{/issue/{id}(id=${contrib.issue.id})}"
@@ -119,7 +134,10 @@
 		</div>
 	</div>
 
-	<script type="text/javascript">
+	<script type="text/javascript" th:inline="javascript">
+		var issue = /*[[${issue.id}]]*/-1;
+		var me = /*[[${me.name}]]*/ "";
+
 		$(document).ready(
 				function() {
 					$('.summernote').summernote({
@@ -146,7 +164,94 @@
 									return;
 								}
 							});
+
+					$.ajax({
+						type : "GET",
+						url : '/api/issues/' + issue,
+						success : function(data) {
+							updateOptions(data);
+						},
+						dataType : "json",
+						contentType : "application/json"
+					});
 				});
+
+		function updateOptions(data) {
+			if (data.open) {
+				document.getElementById("open").style.display = "none";
+				document.getElementById("close").style.display = "block";
+			} else {
+				document.getElementById("open").style.display = "block";
+				document.getElementById("close").style.display = "none";
+			}
+			
+			var i = 0;
+			var foundMe = false;
+			if(data.watchers.length!=0){
+				do{
+					if(data.watchers[i].name == me)foundMe = true;
+					i++;
+				} while(i!=data.watchers.length);
+			}
+			
+			if(foundMe) {
+				document.getElementById("unwatch").style.display = "block";
+				document.getElementById("watch").style.display = "none";
+			} else {
+				document.getElementById("unwatch").style.display = "none";
+				document.getElementById("watch").style.display = "block";
+			}
+			
+		}
+		
+		function watch() {
+			$.ajax({
+				type : "GET",
+				url : '/api/issues/' + issue + ':watch',
+				success : function(data) {
+					updateOptions(data);
+				},
+				dataType : "json",
+				contentType : "application/json"
+			});
+		};
+		
+		function unwatch() {
+			$.ajax({
+				type : "GET",
+				url : '/api/issues/' + issue + ':unwatch',
+				success : function(data) {
+					updateOptions(data);
+				},
+				dataType : "json",
+				contentType : "application/json"
+			});
+		};
+
+		function close() {
+			$.ajax({
+				type : "GET",
+				url : '/api/issues/' + issue + ':close',
+				success : function(data) {
+					window.location.reload();
+				},
+				dataType : "json",
+				contentType : "application/json"
+			});
+		};
+
+		function open() {
+			$.ajax({
+				type : "GET",
+				url : '/api/issues/' + issue + ':open',
+				success : function(data) {
+					window.location.reload();
+				},
+				dataType : "json",
+				contentType : "application/json"
+			});
+		};
 	</script>
+
 </body>
 </html>

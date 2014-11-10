@@ -1,8 +1,10 @@
 package de.gpue.gotissues.bo;
 
 import java.util.Date;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -34,9 +36,9 @@ public class Issue {
 	@ManyToOne
 	private Issue parent;
 	@ManyToMany
-	private List<Contributor> assignees;
+	private Set<Contributor> assignees;
 	@ManyToMany
-	private List<Contributor> watchers;
+	private Set<Contributor> watchers;
 
 	public Issue() {
 	}
@@ -51,8 +53,8 @@ public class Issue {
 		this.created = new Date();
 		this.lastChanged = created;
 		this.open = true;
-		this.assignees = new LinkedList<>();
-		this.watchers = new LinkedList<>();
+		this.assignees = new HashSet<>();
+		this.watchers = new HashSet<>();
 	}
 
 	public Long getId() {
@@ -119,19 +121,19 @@ public class Issue {
 		this.parent = parent;
 	}
 
-	public List<Contributor> getAssignees() {
+	public Set<Contributor> getAssignees() {
 		return assignees;
 	}
 
-	public void setAssignees(List<Contributor> assignees) {
+	public void setAssignees(Set<Contributor> assignees) {
 		this.assignees = assignees;
 	}
 
-	public List<Contributor> getWatchers() {
+	public Set<Contributor> getWatchers() {
 		return watchers;
 	}
 
-	public void setWatchers(List<Contributor> watchers) {
+	public void setWatchers(Set<Contributor> watchers) {
 		this.watchers = watchers;
 	}
 

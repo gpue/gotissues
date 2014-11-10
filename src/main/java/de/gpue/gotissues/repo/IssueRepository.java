@@ -15,11 +15,12 @@ import de.gpue.gotissues.bo.Issue;
 public interface IssueRepository extends Repository<Issue, Long>{
 	
 	public List<Issue> findByTitleContainingOrDescriptionContaining(String st,String sc);
-	public Page<Issue> findByTitleContainingOrDescriptionContaining(String st,String sc,Pageable p);
 	
 	public Issue findOne(Long id);
 	public List<Issue> findByWatchers(Contributor watcher);
 	public List<Issue> findByAssignees(Contributor assignee);
+	public List<Issue> findByParentOrderByLastChangedDesc(Issue parent);
+
 	
 	public Issue save(Issue i);
 	

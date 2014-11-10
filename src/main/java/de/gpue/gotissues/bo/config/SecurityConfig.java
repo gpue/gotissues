@@ -59,7 +59,7 @@ public class SecurityConfig extends GlobalAuthenticationConfigurerAdapter {
 		try {
 			cuds.loadUserByUsername("admin");
 		} catch (UsernameNotFoundException e) {
-			Contributor admin = new Contributor("admin", "test@example.com",
+			Contributor admin = new Contributor("admin", "", "test@example.com",
 					encoder.encode("vivaris"));
 			admin.setAdmin(true);
 			cuds.getRepo().save(admin);
@@ -104,7 +104,7 @@ public class SecurityConfig extends GlobalAuthenticationConfigurerAdapter {
 		protected void configure(HttpSecurity http) throws Exception {
 			http.authorizeRequests().anyRequest().authenticated().and()
 					.formLogin()
-					.loginPage("/login").defaultSuccessUrl("/issuelist").permitAll().and().logout()
+					.loginPage("/login").defaultSuccessUrl("/issuelist",true).permitAll().and().logout()
 					.logoutUrl("/logout").logoutSuccessUrl("/login");
 			http.csrf().disable();
 			log.debug("configured API authentification");
