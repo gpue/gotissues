@@ -1,7 +1,10 @@
 package de.gpue.gotissues.repo;
 
+import java.util.Date;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.Repository;
 import org.springframework.stereotype.Component;
 
@@ -10,13 +13,16 @@ import de.gpue.gotissues.bo.Issue;
 
 @Component("issues")
 public interface IssueRepository extends Repository<Issue, Long>{
-	public List<Issue> findAll();
+	
+	public List<Issue> findByTitleContainingOrDescriptionContaining(String st,String sc);
+	public Page<Issue> findByTitleContainingOrDescriptionContaining(String st,String sc,Pageable p);
 	
 	public Issue findOne(Long id);
 	public List<Issue> findByWatchers(Contributor watcher);
 	public List<Issue> findByAssignees(Contributor assignee);
 	
-	public void save(Issue i);
+	public Issue save(Issue i);
 	
+	int countByAssigneesAndDeadlineBefore(Contributor assignee,Date deadline);
 	int count();
 }

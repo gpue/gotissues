@@ -23,24 +23,26 @@ public class Contribution {
 	@ManyToOne
 	private Contributor contributor;
 	@NotNull
-	private Boolean revisable;
-	
+	private boolean revisable;
+	private int points;
+
 	public Contribution() {
 	}
 
 	public Contribution(String content, Date created, Issue issue,
-			Contributor contributor, Boolean revisable) {
+			Contributor contributor, Boolean revisable, int points) {
 		this.content = content;
 		this.created = created;
 		this.issue = issue;
 		this.contributor = contributor;
 		this.revisable = revisable;
+		this.points = points;
 	}
-	
+
 	public Long getId() {
 		return id;
 	}
-	
+
 	public void setId(Long id) {
 		this.id = id;
 	}
@@ -77,11 +79,11 @@ public class Contribution {
 		this.contributor = contributor;
 	}
 
-	public Boolean getRevisable() {
+	public boolean isRevisable() {
 		return revisable;
 	}
 
-	public void setRevisable(Boolean revisable) {
+	public void setRevisable(boolean revisable) {
 		this.revisable = revisable;
 	}
 
@@ -113,6 +115,14 @@ public class Contribution {
 		} else if (!id.equals(other.id))
 			return false;
 		return true;
+	}
+
+	public int getPoints() {
+		return points;
+	}
+
+	public void setPoints(int points) {
+		this.points = points;
 	}
 
 }

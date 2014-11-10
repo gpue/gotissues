@@ -7,45 +7,92 @@
 	<div th:replace="skeleton::jumbotron"></div>
 	<div th:replace="skeleton::nav"></div>
 
-	<div class="container" role="alert" th:if="${max} == 0">
-		<div class="alert alert-warning">No contributions found for
-			selected timespan!</div>
-	</div>
-
 	<div class="container">
 		<div class="row">
 			<div class="col-md-12" style="text-align: center">
 				<ul class="pagination">
-					<li><a href="/userstats?start=-86400000">today</a></li>
-					<li><a href="/userstats?start=-604800000">week</a></li>
-					<li><a href="/userstats?start=-18144000000">30d</a></li>
-					<li><a href="/userstats?start=-54432000000">3 months</a></li>
-					<li><a href="/userstats?start=-108864000000">6 months</a></li>
-					<li><a href="/userstats?start=-220752000000">year</a></li>
-					<li><a href="/userstats">ever</a></li>
+					<li><a href="javascript:charts(-86400000)">today</a></li>
+					<li><a href="javascript:charts(-604800000)">week</a></li>
+					<li><a href="javascript:charts(-18144000000)">30d</a></li>
+					<li><a href="javascript:charts(-54432000000)">3 months</a></li>
+					<li><a href="javascript:charts(-108864000000)">6 months</a></li>
+					<li><a href="javascript:charts(-220752000000)">year</a></li>
+					<li><a href="javascript:charts()">ever</a></li>
 				</ul>
 			</div>
 		</div>
 	</div>
 
 	<div class="col-md-8 col-md-offset-2">
-		<table th:if="${max} > 0">
-			<tbody>
-				<tr th:each="contributor : ${contributors}">
-					<td><a th:href="@{/contributor/{id}(id=${contributor.name})}"
-						th:text="${contributor.name}">CONTRIBUTOR</a></td>
-					<td
-						style="min-width: 300px; width: 1000px; padding: 0; padding-left: 20px; padding-top: 20px">
-						<div class="progress">
-							<div class="progress-bar progress-bar-success" role="progressbar"
-								th:attr="aria-valuenow=${contributor.statCount},aria-valuemax=(100*${max})"
-								th:attrappend="style=${'width:'+(100/max*contributor.statCount)+'%'}"
-								th:text="${contributor.statCount}" aria-valuemin="0">SHARE</div>
-						</div>
-					</td>
-				</tr>
+		<table class="table">
+			<tbody id="stats">
 			</tbody>
 		</table>
 	</div>
+
+	<script type="text/javascript">
+	<!--
+		function chartsEver() {
+			charts(0);
+		}
+		function charts(s) {
+			Chart.defaults.global.responsive = !1;
+
+			var uri = "/api/stats";
+
+			if (s != 0) {
+				uri += '?start=' + s;
+			}
+
+			$
+					.getJSON(
+							uri,
+							function(stats) {
+								var html = "";
+								var max = 1;
+
+								for (var i = 0; i < stats.length; i++) {
+									var c = stats[i];
+									if (c.points > max) {
+										max = c.points;
+									}
+								}
+
+								for (var i = 0; i < stats.length; i++) {
+									var c = stats[i];
+									html += "<tr><td style=\"vertical-align:middle\"><div class=\"progress-bar\" role=\"progressbar\" aria-valuenow=\""
+											+ c.points
+											+ "\" aria-valuemin=\"0\" aria-valuemax=\""
+											+ max
+											+ "\" style=\"width:"
+											+ (100 * c.points / max)
+											+ "%;min-width:200px\">"
+											+ c.points
+											+ " contribution points</div></td><td style=\"vertical-align:middle\">"
+											+ "<a href=\"/contributors/"+c.contributor+"\">"
+											+ c.contributor
+											+ "</a>"
+											+ "</td><td><canvas id=\""+c.contributor+"\" class=\"chart\" height=\"100\" width=\"100\" style=\"width:100px;height:100px\"></canvas></td></tr>\n";
+								}
+
+								$('#stats').html(html);
+
+								for (var i = 0; i < stats.length; i++) {
+									var c = stats[i];
+									var canvas = document
+											.getElementById(c.contributor);
+									var ctx = canvas.getContext("2d");
+									
+									if (c.data[0].value==0 && c.data[1].value==0) {
+										new Chart(ctx).Doughnut([{label:"none",color:"lightgrey",value:100}], {});
+									} else {
+										new Chart(ctx).Doughnut(c.data, {});
+									}
+								}
+							});
+		}
+		$(document).ready(chartsEver);
+		-->
+	</script>
 </body>
 </html>

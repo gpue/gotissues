@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="skeleton::head"></head>
+<body>
+	<div th:replace="skeleton::jumbotron"></div>
+	<div th:replace="skeleton::nav"></div>
+
+	<div class="container">
+		<div class="row col-md-10">
+
+			<form class="form-horizontal" role="form" action="issuelist"
+				method="post" data-parsley-validate="true" id="issueform">
+				<div class="form-group">
+					<label for="title" class="col-sm-2 control-label"></label>
+					<div class="col-sm-10">
+						<h2>
+							Issue #<span th:text="${issue.id}">ID</span>
+						</h2>
+					</div>
+				</div>
+
+
+				<div th:if="${issue.parent} != null" class="form-group">
+					<label for="parent" class="col-sm-2 control-label">Parent</label> <input
+						type="hidden" id="parent" name="parent" th:value="${parent.id}" />
+					<div class="col-sm-10">
+						<a class="form-control"
+							th:text="${'#' + issue.parent.id + ' ' + issue.parent.title}"
+							th:href="@{/issue/{id}(id=${issue.parent.id})}">PARENT</a>
+					</div>
+				</div>
+				<div class="form-group">
+					<label for="title" class="col-sm-2 control-label">Title</label>
+					<div class="col-sm-10">
+						<input type="text" class="form-control" id="title" name="title"
+							required="required" th:value="${issue.title}"
+							data-parsley-length="[3,64]" />
+					</div>
+				</div>
+				<div class="form-group">
+					<label for="assignee" class="col-sm-2 control-label">Assignees</label>
+					<div class="col-sm-10">
+						<select id="select-beast" name="assignees[]" multiple="multiple">
+							<option th:each="contributor : ${issue.assignees}"
+								th:text="${contributor.name}" th:value="${contributor.name}">Add
+								a contributor...</option>
+							<option th:each="contributor : ${contributors}"
+								th:unless="${issue.assignees.contains(contributor)}"
+								th:text="${contributor.name}" th:value="${contributor.name}">Add
+								a contributor...</option>
+						</select>
+					</div>
+				</div>
+				<div class="form-group">
+					<label for="deadline" class="col-sm-2 control-label">Deadline</label>
+					<div class="col-sm-10">
+						<input class="datepicker form-control"
+							data-date-format="dd.mm.yyyy" id="deadline" name="deadline"
+							th:value="${issue.deadline} != null ? ${#calendars.format(issue.deadline,'dd. MMMM yyyy, hh:mm:ss')}"></input>
+					</div>
+				</div>
+				<div class="form-group">
+					<label for="description" class="col-sm-2 control-label">Description</label>
+					<div class="col-sm-10">
+						<input type="hidden" name="description" id="description" />
+						<div id="sndesc" class="summernote"
+							th:utext="${issue.description}"></div>
+					</div>
+				</div>
+				<div class="form-group">
+					<div class="col-sm-offset-2 col-sm-10">
+						<button class="btn btn-primary fa fa-check validate">&nbsp;Create</button>
+					</div>
+				</div>
+			</form>
+		</div>
+	</div>
+
+	<div class="row">&nbsp;</div>
+
+	<div class="container">
+		<div class="row">
+			<div class="col-md-11 top-margin">
+				<div>
+					<ul class="timeline">
+						<li th:each="contrib : ${contributions}"><i
+							class="fa fa-edit bg-green"></i>
+							<div class="timeline-item">
+								<h3 class="timeline-header">New contribution</h3>
+								<div class="timeline-body">
+									<form class="form-horizontal" role="form" action="issuelist"
+										method="post" data-parsley-validate="true" id="issueform">
+										<div class="summernote"></div>
+										<button class="btn btn-primary fa fa-check validate">&nbsp;Contribute</button>
+									</form>
+								</div>
+							</div></li>
+						<li th:each="contrib : ${contributions}"><i
+							class="fa fa-edit bg-blue"></i>
+							<div class="timeline-item">
+								<span class="time"
+									th:text="${#calendars.format(contrib.created,'dd. MMMM yyyy, hh:mm:ss')}"><i
+									class="fa fa-clock-o"></i>DATE</span>
+								<h3 class="timeline-header">
+									<a
+										th:href="@{/contributor/{id}(id=${contrib.contributor.name})}"
+										th:text="${contrib.contributor.name}">USER</a>
+									&nbsp;contributed to&nbsp; <a
+										th:href="@{/issue/{id}(id=${contrib.issue.id})}"
+										th:text="'#' + ${contrib.issue.id} + ' ' + ${contrib.issue.title}">ISSUE</a>
+								</h3>
+								<div class="timeline-body" th:utext="${contrib.content}">CONTENT</div>
+							</div></li>
+						<li><i class="fa fa-clock-o"></i></li>
+					</ul>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script type="text/javascript">
+		$(document).ready(
+				function() {
+					$('.summernote').summernote({
+						height : 150
+					});
+					$('#select-beast').selectize({
+						create : true,
+						sortField : 'text'
+					});
+					$('.datepicker').datepicker({
+						startDate : '-0d',
+						weekStart : 1,
+						todayHighlight : true,
+						todayBtn : true,
+						autoclose : true
+					});
+
+					$('#issueform').parsley().subscribe(
+							'parsley:form:validate', function(formInstance) {
+								if (formInstance.isValid(true)) {
+									$('#description').attr({
+										value : $('#sndesc').code()
+									});
+									return;
+								}
+							});
+				});
+	</script>
+</body>
+</html>

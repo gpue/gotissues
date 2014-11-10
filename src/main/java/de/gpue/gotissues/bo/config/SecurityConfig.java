@@ -1,7 +1,23 @@
 package de.gpue.gotissues.bo.config;
 
+import java.io.IOException;
+
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.aspectj.lang.JoinPoint;
+import org.aspectj.lang.annotation.After;
+import org.aspectj.lang.annotation.AfterReturning;
+import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Before;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -10,12 +26,20 @@ import org.springframework.security.config.annotation.authentication.configurers
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.config.annotation.web.servlet.configuration.EnableWebMvcSecurity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Component;
+import org.springframework.web.servlet.HandlerInterceptor;
+import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import de.gpue.gotissues.bo.Contribution;
 import de.gpue.gotissues.bo.Contributor;
+import de.gpue.gotissues.bo.Issue;
 
 @Configuration
 @EnableWebSecurity
@@ -84,6 +108,42 @@ public class SecurityConfig extends GlobalAuthenticationConfigurerAdapter {
 					.logoutUrl("/logout").logoutSuccessUrl("/login");
 			http.csrf().disable();
 			log.debug("configured API authentification");
+		}
+	}
+	
+	
+	@Aspect
+	@Component
+	public static class PasswordFilterAspect{
+		
+		private static String SECURE_PKG_PREFIX = "de.gpue";
+		
+		@AfterReturning(value="execution(* de.gpue.gotissues.controllers.GotIssuesRestController.*(..))",returning="result")
+		public void removePasswordWriteObject(JoinPoint p, Object result){
+			String caller = Thread.currentThread().getStackTrace()[2].getClassName();
+			if(!caller.startsWith(SECURE_PKG_PREFIX))removePassword(result);
+		}
+		
+		public void removePassword(Object o){
+			if(o instanceof Iterable)((Iterable<?>)o).forEach(e -> removePassword(e));
+			if(o instanceof Contributor)removePasswordsFromContributor((Contributor)o);
+			if(o instanceof Contribution)removePasswordsFromContribution((Contribution)o);
+			if(o instanceof Issue)removePasswordsFromIssue((Issue)o);
+		}
+		
+		private void removePasswordsFromContributor(Contributor c) {
+			c.setPassword(null);
+		}
+
+		private void removePasswordsFromIssue(Issue i) {
+			i.getCreator().setPassword(null);
+			i.getAssignees().forEach(a -> a.setPassword(null));
+			i.getWatchers().forEach(a -> a.setPassword(null));
+		}
+
+		private void removePasswordsFromContribution(Contribution c) {
+			removePasswordsFromIssue(c.getIssue());
+			c.getContributor().setPassword(null);
 		}
 	}
 

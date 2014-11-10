@@ -22,11 +22,14 @@
 			<tbody>
 				<tr th:each="issue: ${issues}">
 					<td><a th:text="${'#'+issue.id+' '+issue.title}"
-						th:href="@{/issue/{id}}(id=${issue.id})">Issue</a></td>
-					<td th:text="${issue.lastChange}">Latest activity</td>
+						th:href="@{/issue/{id}(id=${issue.id})}">Issue</a></td>
+					<td th:text="${issue.lastChanged}">Latest activity</td>
 					<td th:text="${issue.deadline}">Deadline</td>
 					<td><span th:text="${issue.isOpen()} ? 'open' : 'closed'"
 						th:attr="class=${issue.isOpen() ? 'btn btn-success' : 'btn btn-danger'}">State</span></td>
+					<td><a
+						th:href="@{/issue/{parent}/createissue(parent=${issue.id})}">Create
+							child issue</a></td>
 				</tr>
 			</tbody>
 		</table>

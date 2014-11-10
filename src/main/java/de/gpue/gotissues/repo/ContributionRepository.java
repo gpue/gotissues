@@ -3,6 +3,7 @@ package de.gpue.gotissues.repo;
 import java.util.Date;
 import java.util.List;
 
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.Repository;
 import org.springframework.stereotype.Component;
 
@@ -22,9 +23,10 @@ public interface ContributionRepository extends  Repository<Contribution, Long> 
 	
 	List<Contribution> findByContributorOrderByCreatedDesc(Contributor contributor);
 	
-	List<Contribution> findByContentLike(String needle);
+	List<Contribution> findByContentContaining(String search);
 	
-	int countByContributorAndCreatedAfter(Contributor c, Date from);
+	@Query("SELECT SUM(cb.points) FROM Contribution cb WHERE cb.contributor=?1 and cb.created > ?2")
+	Integer getPoints(Contributor c, Date from);
 		
-	int count();
+	Integer count();
 }

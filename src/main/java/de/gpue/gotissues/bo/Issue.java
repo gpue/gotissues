@@ -9,7 +9,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
@@ -27,12 +26,9 @@ public class Issue {
 	private Date deadline;
 	@NotNull
 	@ManyToOne
-	private Issue issue;
-	@NotNull
-	@ManyToOne
 	private Contributor creator;
 	@NotNull
-	private Boolean open;
+	private boolean open;
 	@NotNull
 	private Date lastChanged;
 	@ManyToOne
@@ -45,21 +41,28 @@ public class Issue {
 	public Issue() {
 	}
 
-	public Issue(String title, String description, Date created, Issue issue,
+	public Issue(String title, String description, Date created,
 			Contributor creator, Issue parent) {
 		this.title = title;
 		this.description = description;
 		this.created = created;
-		this.issue = issue;
 		this.creator = creator;
 		this.parent = parent;
 		this.created = new Date();
 		this.lastChanged = created;
-		this.open = false;
+		this.open = true;
 		this.assignees = new LinkedList<>();
 		this.watchers = new LinkedList<>();
 	}
 
+	public Long getId() {
+		return id;
+	}
+	
+	public void setId(Long id) {
+		this.id = id;
+	}
+	
 	public String getTitle() {
 		return title;
 	}
@@ -84,14 +87,6 @@ public class Issue {
 		this.created = created;
 	}
 
-	public Issue getIssue() {
-		return issue;
-	}
-
-	public void setIssue(Issue issue) {
-		this.issue = issue;
-	}
-
 	public Contributor getCreator() {
 		return creator;
 	}
@@ -100,7 +95,7 @@ public class Issue {
 		this.creator = creator;
 	}
 
-	public Boolean getOpen() {
+	public boolean isOpen() {
 		return open;
 	}
 

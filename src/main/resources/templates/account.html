@@ -6,46 +6,55 @@
 <body>
 	<div th:replace="skeleton::jumbotron"></div>
 	<div th:replace="skeleton::nav"></div>
-
+	<div class="container col-md-5 col-md-offset-4" style="display:none" id="alert">
+		<div class="alert alert-success"><strong>Success!</strong> Account data has been saved!</div>
+	</div>
 	<div class=" container col-md-6 col-md-offset-3">
 		<form class="form-horizontal" method="post" role="form"
-			data-parsley-validate="true">
-			<div class="form-group"
-				th:if="${me.isAdmin()} == true and ${case} == 'edit'">
-				<label class="col-sm-2 control-label">Options</label>
+			data-parsley-validate="true" id="form">
+			<div class="form-group" style="display: none" id="options">
+				<label class="col-sm-2 control-label"></label>
 				<div class="col-sm-10">
-
-					<span> <a th:if="${user.isEnabled()} == true"
-						th:href="@{/account/{id}?action=disable(id=${user.name})}"
-						class="btn btn-danger fa fa-close">&nbsp;Disable</a> <span
-						th:if="${user.isEnabled()} == false"><span class="h5">is
-								disabled&nbsp;</span> <a
-							th:href="@{/account/{id}?action=enable(id=${user.name})}"
-							class="btn btn-success fa fa-check">&nbsp;Enable</a></span> <a
-						th:if="${user.isAdmin()} == false"
-						th:href="@{/account/{id}?action=grant(id=${user.name})}"
-						class="btn btn-success fa fa-key">&nbsp;Grant admin</a> <span
-						th:if="${user.isAdmin()} == true"><span class="h5">is
-								admin&nbsp;</span><a
-							th:href="@{/account/{id}?action=revoke(id=${user.name})}"
-							class="btn btn-danger fa fa-close">&nbsp;Revoke admin</a></span>
+					<span> 
+					
+					<span
+						style="display: none" id="disable" class="h5">is enabled&nbsp;
+					<a class="btn btn-danger fa fa-close"
+						href="javascript:enable(false);">&nbsp;Disable</a>
+					</span>						
+					
+					<span class="h5" 
+						style="display: none" id="enable">is disabled&nbsp; <a
+							href="javascript:enable(true);"
+							class="btn btn-success fa fa-check">&nbsp;Enable</a>
+					</span> 
+					
+					<span
+						style="display: none" id="grant" class="h5">is not admin&nbsp;
+					<a href="javascript:grant(true);"
+						class="btn btn-success fa fa-key">&nbsp;Grant admin</a> 
+						</span>
+						
+					<span
+						style="display: none" id="revoke" class="h5">is admin&nbsp;
+							<a class="btn btn-danger fa fa-close"
+							href="javascript:grant(false);">&nbsp;Revoke admin</a>
+					</span>
 					</span>
 				</div>
 			</div>
 
 			<div class="form-group">
-				<label for="newusername" class="col-sm-2 control-label">Username</label>
+				<label for="username" class="col-sm-2 control-label">Username</label>
 				<div class="col-sm-10">
-					<input type="text" class="form-control" id="newusername"
-						name="newusername" th:value="${user.name}"
-						data-parsley-minlength="3" required="required" />
+					<input type="text" class="form-control" id="username"
+						name="username" data-parsley-minlength="3" required="required" />
 				</div>
 			</div>
 			<div class="form-group">
 				<label for="mail" class="col-sm-2 control-label">Email</label>
 				<div class="col-sm-10">
-					<input type="email" class="form-control" id="mail" name="mail"
-						th:value="${user.mail}" />
+					<input type="email" class="form-control" id="mail" name="mail" />
 				</div>
 			</div>
 			<div class="form-group">
@@ -53,33 +62,144 @@
 					password</label>
 				<div class="col-sm-10">
 					<input type="password" class="form-control" id="password"
-						name="password" data-parsley-length="[5,16]" required="required"
-						th:if="${case} == 'edit'" value="____NOTHING" /> <input
-						type="password" class="form-control" id="password" name="password"
-						data-parsley-length="[5,16]" required="required"
-						th:if="${case} == 'new'" />
+						name="password" data-parsley-length="[5,16]" required="required" />
 
 				</div>
 			</div>
 			<div class="form-group">
 				<label for="repeat" class="col-sm-2 control-label">Repeat</label>
 				<div class="col-sm-10">
-
 					<input type="password" class="form-control" id="repeat"
 						name="repeat" data-parsley-length="[5,16]" required="required"
-						th:if="${case} == 'edit'" value="____NOTHING"
-						data-parsley-equalto="#password" /> <input type="password"
-						class="form-control" id="repeat" name="repeat"
-						data-parsley-length="[5,16]" required="required"
-						th:if="${case} == 'new'" data-parsley-equalto="#password" />
+						data-parsley-equalto="#password" />
 
 				</div>
 			</div>
 			<div class="form-group">
 				<div class="col-sm-offset-2 col-sm-10">
-					<button type="submit" class="btn btn-primary fa fa-save">&nbsp;Save</button>
+					<a href="javascript:save()" class="btn btn-primary fa fa-save">&nbsp;Save</a>
 				</div>
 			</div>
+			<script type="text/javascript">
+				var contributor = null;
+				var pwd = "********";
+
+				$(document).ready(function() {
+					var urlArr = window.location.href.split("/");
+					if (urlArr[urlArr.length - 1] != 'createaccount') {
+						contributor = urlArr[urlArr.length - 1];
+						$.ajax({
+							type : "GET",
+							url : '/api/contributors/' + contributor,
+							success : function(data) {
+								updateForm(data);
+							},
+							dataType : "json",
+							contentType : "application/json"
+						});
+					}
+				});
+				
+				function updateMe(data){
+					$.ajax({
+						type : "GET",
+						url : '/api/contributors:me',
+						success : function(me) {
+							showOptions(me.admin,data);
+						},
+						dataType : "json",
+						contentType : "application/json"
+					});					
+				};
+				
+				function enable(yesno){
+					$.ajax({
+						type : "GET",
+						url : '/api/contributors/' + contributor+':enable',
+						data: {enabled : yesno},
+						success : function(data) {
+							updateForm(data);
+						},
+						dataType : "json",
+						contentType : "application/json"
+					});
+				};
+				
+				function grant(yesno){
+					$.ajax({
+						type : "GET",
+						url : '/api/contributors/' + contributor+':grant',
+						data: {admin : yesno},
+						success : function(data) {
+							updateForm(data);
+						},
+						dataType : "json",
+						contentType : "application/json"
+					});
+				};
+
+				function showOptions(admin,data){
+					if(admin){
+						document.getElementById("options").style.display = "block";
+						if(data.enabled){
+							document.getElementById("enable").style.display = "none";
+							document.getElementById("disable").style.display = "block";
+						} else {
+							document.getElementById("enable").style.display = "block";
+							document.getElementById("disable").style.display = "none";
+						}
+						if(data.admin){
+							document.getElementById("grant").style.display = "none";
+							document.getElementById("revoke").style.display = "block";
+						} else {
+							document.getElementById("grant").style.display = "block";
+							document.getElementById("revoke").style.display = "none";
+						}
+					} else {
+						document.getElementById("options").style.display = "none";
+					}
+				};
+				
+				function updateForm(data) {
+					document.getElementById("username").value = data.name;
+					document.getElementById("mail").value = data.mail;
+					document.getElementById("password").value = pwd;
+					document.getElementById("repeat").value = pwd;
+					updateMe(data);
+				};
+
+				function save() {
+					var formData = {
+							password: document.getElementById("password").value,	
+							username: document.getElementById("username").value,	
+							mail: document.getElementById("mail").value
+					};
+					if (formData.password == pwd) {
+						delete (formData.password);
+					}
+					
+					var curl = "";
+					if(contributor == null){
+						curl = "/api/contributors:add";
+					} else {
+						curl = '/api/contributors/' + contributor + ':alter';
+					}
+					
+					$.ajax({
+								type : "GET",
+								url : curl,
+								data : formData,
+								success : function(data) {
+									contributor = data.name;
+									updateForm(data);
+								},
+								dataType : "json",
+								contentType : "application/json"
+							});
+					
+					document.getElementById("alert").style.display = "block";
+				};
+			</script>
 		</form>
 	</div>
 </body>

@@ -22,28 +22,50 @@ public class Contributor implements UserDetails {
 	private static final long serialVersionUID = -8002485583324454606L;
 
 	@Id
-	@Size(min=3,max = 16)
+	@Size(min = 3, max = 16)
 	private String name;
 	@Size(max = 64)
 	private String mail;
 	private Date lastContribution;
-	@Transient
-	private int statCount;
 	private boolean admin;
 	private boolean enabled;
 	@NotNull
 	private String password;
+	@Transient
+	private int assignedCount;
+	@Transient
+	private int deadlineRaisedCount;
+	@Transient
+	private int points;
+
+	public int getAssignedCount() {
+		return assignedCount;
+	}
+
+	public void setAssignedCount(int assignedCount) {
+		this.assignedCount = assignedCount;
+	}
+
+	public int getDeadlineRaisedCount() {
+		return deadlineRaisedCount;
+	}
+
+	public void setDeadlineRaisedCount(int deadlineRaisedCount) {
+		this.deadlineRaisedCount = deadlineRaisedCount;
+	}
 
 	public Contributor() {
 	}
 
 	public Contributor(String name, String mail, String password) {
-		super();
 		this.name = name;
 		this.mail = mail;
 		this.enabled = true;
 		this.admin = false;
 		this.password = password;
+		this.deadlineRaisedCount = 0;
+		this.assignedCount = 0;
+		this.points = 0;
 	}
 
 	public boolean isAdmin() {
@@ -54,12 +76,12 @@ public class Contributor implements UserDetails {
 		this.admin = admin;
 	}
 
-	public int getStatCount() {
-		return statCount;
+	public int getPoints() {
+		return points;
 	}
 
-	public void setStatCount(int statCount) {
-		this.statCount = statCount;
+	public void setPoints(int points) {
+		this.points = points;
 	}
 
 	public String getName() {
