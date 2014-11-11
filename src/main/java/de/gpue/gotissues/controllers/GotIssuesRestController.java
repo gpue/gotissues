@@ -11,10 +11,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import javax.validation.constraints.AssertTrue;
+
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -39,8 +42,9 @@ public class GotIssuesRestController {
 	private static final String WATCHED = "watched@";
 	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat(
 			"dd.MM.yyyy");
-	private static final int PAGE_SIZE = 20;
+	public static final int PAGE_SIZE = 20;
 	private static final String ASSIGNED = "assigned@";
+	private static final String NO_PWD = "********";
 
 	@Autowired
 	private IssueRepository issues;
@@ -55,10 +59,12 @@ public class GotIssuesRestController {
 
 	@RequestMapping("/issues")
 	public List<Issue> getIssues(
-			@RequestParam(value = "page", required= false) Integer page,
+			@RequestParam(value = "page", required = false) Integer page,
 			@RequestParam(value = "search", defaultValue = "") String search) {
 		List<Issue> il = getIssues(search != null ? search : "");
-		return page == null ? il : il.subList(PAGE_SIZE*(page-1), Math.min(il.size(),PAGE_SIZE*page));
+		return page == null ? il : il.subList(
+				Math.min(il.size() - 1, PAGE_SIZE * (page - 1)),
+				Math.min(il.size() - 1, PAGE_SIZE * page));
 	}
 
 	@Cacheable("default")
@@ -75,15 +81,15 @@ public class GotIssuesRestController {
 					c -> found.add(c.getIssue()));
 
 			if (s.startsWith(WATCHED)) {
-				String cn = s.substring(WATCHED
-						.length());
-				Contributor c = cn.length()==0 ? getMe() : contributors.findOne(cn);
+				String cn = s.substring(WATCHED.length());
+				Contributor c = cn.length() == 0 ? getMe() : contributors
+						.findOne(cn);
 				if (c != null)
 					found.addAll(issues.findByWatchers(c));
 			} else if (s.startsWith(ASSIGNED)) {
-				String cn = s.substring(ASSIGNED
-						.length());
-				Contributor c = cn.length()==0 ? getMe() : contributors.findOne(cn);
+				String cn = s.substring(ASSIGNED.length());
+				Contributor c = cn.length() == 0 ? getMe() : contributors
+						.findOne(cn);
 				if (c != null)
 					found.addAll(issues.findByWatchers(c));
 			} else {
@@ -105,17 +111,20 @@ public class GotIssuesRestController {
 
 		return orderChildren(result);
 	}
-	
-	private List<Issue> orderChildren(List<Issue> todo){
+
+	private List<Issue> orderChildren(List<Issue> todo) {
 		List<Issue> result = new LinkedList<>();
-		
-		while(!todo.isEmpty()){
+
+		while (!todo.isEmpty()) {
 			Issue head = todo.remove(0);
 			result.add(head);
-			List<Issue> children = issues.findByParentOrderByLastChangedDesc(head);
+			List<Issue> children = issues
+					.findByParentOrderByLastChangedDesc(head);
+			todo.removeAll(children);
+			result.removeAll(children);
 			todo.addAll(0, children);
 		}
-		
+
 		return result;
 	}
 
@@ -126,9 +135,10 @@ public class GotIssuesRestController {
 
 	@RequestMapping(value = "/issues:add", method = { RequestMethod.GET,
 			RequestMethod.POST })
+	@CacheEvict("default")
 	public Issue addIssue(
 			@RequestParam("title") String title,
-			@RequestParam(value = "description", required = false) String description,
+			@RequestParam(value = "description", defaultValue = "") String description,
 			@RequestParam(value = "parent", required = false) Long parent,
 			@RequestParam(value = "assignees[]", required = false) List<String> assignees,
 			@RequestParam(value = "deadline", required = false) String deadline)
@@ -137,7 +147,7 @@ public class GotIssuesRestController {
 				contributors.findOne(getMe().getUsername()),
 				parent != null ? getIssue(parent) : null);
 
-		if (deadline != null)
+		if (deadline != null && deadline != "")
 			i.setDeadline(DATE_FORMAT.parse(deadline));
 		if (assignees != null) {
 			i.setAssignees(new HashSet<>());
@@ -156,6 +166,7 @@ public class GotIssuesRestController {
 
 	@RequestMapping(value = "/issues/{i}:alter", method = { RequestMethod.GET,
 			RequestMethod.POST })
+	@CacheEvict("default")
 	public Issue alterIssue(
 			@PathVariable("i") Long id,
 			@RequestParam(value = "title", required = false) String title,
@@ -231,7 +242,8 @@ public class GotIssuesRestController {
 
 		issues.save(i);
 
-		issues.findByParentOrderByLastChangedDesc(i).forEach(ic -> closeIssue(ic.getId()));
+		issues.findByParentOrderByLastChangedDesc(i).forEach(
+				ic -> closeIssue(ic.getId()));
 
 		return i;
 	}
@@ -246,6 +258,9 @@ public class GotIssuesRestController {
 		issues.save(i);
 
 		contribute("<h4>Issue re-opened.</h4>", id, getMe().getName(), false, 1);
+
+		if (i.getParent() != null)
+			openIssue(i.getParent().getId());
 
 		return i;
 	}
@@ -283,7 +298,14 @@ public class GotIssuesRestController {
 
 	@RequestMapping(value = "/issues/{i}:contribute", method = {
 			RequestMethod.GET, RequestMethod.POST })
-	public Contribution contribute(String content, Long issue,
+	private Contribution contribute(
+			@RequestParam(value = "content", defaultValue = "") String content,
+			@RequestParam("issue") Long issue) {
+		return contribute(content, issue, getMe().getName(), true, 3);
+	}
+
+	// @CacheEvict("default")
+	private Contribution contribute(String content, Long issue,
 			String contributor, Boolean revisable, int points) {
 		Contribution c = new Contribution(content, new Date(), getIssue(issue),
 				getContributor(contributor), revisable, points);
@@ -307,13 +329,15 @@ public class GotIssuesRestController {
 
 		}
 
+		c = contributions.save(c);
+
 		c.getContributor().setLastContribution(c.getCreated());
 		contributors.save(c.getContributor());
 
 		c.getIssue().setLastChanged(c.getCreated());
 		issues.save(c.getIssue());
 
-		return contributions.save(c);
+		return c;
 	}
 
 	@RequestMapping("/issues/{i}/contributions")
@@ -406,7 +430,7 @@ public class GotIssuesRestController {
 			Integer points = contributions.getPoints(c, start);
 
 			int assigned = 0;
-			cds.add(new ChartDataSet("assigned and in time", assigned = issues
+			cds.add(new ChartDataSet("in time", assigned = issues
 					.countByAssigneesAndDeadlineBefore(c, new Date(
 							Long.MAX_VALUE)), "Green", "lightgreen"));
 			cds.add(new ChartDataSet("overdue", assigned
@@ -435,6 +459,8 @@ public class GotIssuesRestController {
 			@RequestParam("password") String password,
 			@RequestParam("mail") String mail) {
 
+		Assert.isTrue(getMe().isAdmin(), "Only admin can do this!");
+
 		Contributor c = new Contributor(name, fullname, mail,
 				encoder.encode(password));
 
@@ -445,6 +471,7 @@ public class GotIssuesRestController {
 
 	@RequestMapping(value = "/contributors/{c}:alter", method = {
 			RequestMethod.GET, RequestMethod.POST })
+	@CacheEvict("default")
 	public Contributor alterContributor(
 			@PathVariable("c") String c,
 			@RequestParam(value = "name", required = false) String name,
@@ -452,11 +479,14 @@ public class GotIssuesRestController {
 			@RequestParam(value = "password", required = false) String password,
 			@RequestParam(value = "mail", required = false) String mail) {
 
+		Assert.isTrue(getMe().isAdmin() && getMe().getName().equals(name),
+				"Only admin or the contributor himself can do this!");
+
 		Contributor co = contributors.findOne(c);
 
 		if (name != null)
 			co.setName(name);
-		if (password != null)
+		if (password != null && !password.equals(NO_PWD))
 			co.setPassword(encoder.encode(password));
 		if (mail != null)
 			co.setMail(mail);

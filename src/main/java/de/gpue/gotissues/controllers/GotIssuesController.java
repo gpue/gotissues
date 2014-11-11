@@ -62,10 +62,16 @@ public class GotIssuesController implements ErrorController {
 
 	@RequestMapping("/issuelist")
 	public String issuelist(
-			@RequestParam(value = "search", required = false) String search,
+			@RequestParam(value = "search", defaultValue="") String search,
 			@RequestParam(value = "page", required = false) Integer page,
 			Model model) {
 		model.addAttribute("issues", service.getIssues(page, search));
+		model.addAttribute("page", page != null ? page :1);
+		model.addAttribute("search", search);
+		model.addAttribute(
+				"pages",
+				(int) Math.ceil(service.getIssues(null, search).size()
+						/ GotIssuesRestController.PAGE_SIZE));
 		return skeleton("/issuelist", model);
 	}
 

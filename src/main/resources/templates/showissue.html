@@ -38,7 +38,8 @@
 
 				<div th:if="${issue.parent} != null" class="form-group">
 					<label for="parent" class="col-sm-2 control-label">Parent</label> <input
-						type="hidden" id="parent" name="parent" th:value="${parent.id}" />
+						type="hidden" id="parent" name="parent"
+						th:value="${issue.parent.id}" />
 					<div class="col-sm-10">
 						<a class="form-control"
 							th:text="${'#' + issue.parent.id + ' ' + issue.parent.title}"
@@ -54,12 +55,12 @@
 					</div>
 				</div>
 				<div class="form-group">
-					<label for="assignee" class="col-sm-2 control-label">Assignees</label>
+					<label for="assignees[]" class="col-sm-2 control-label">Assignees</label>
 					<div class="col-sm-10">
 						<select id="select-beast" name="assignees[]" multiple="multiple">
 							<option th:each="contributor : ${issue.assignees}"
-								th:text="${contributor.name}" th:value="${contributor.name}">Add
-								a contributor...</option>
+								th:text="${contributor.name}" th:value="${contributor.name}"
+								selected="selected">Add a contributor...</option>
 							<option th:each="contributor : ${contributors}"
 								th:unless="${issue.assignees.contains(contributor)}"
 								th:text="${contributor.name}" th:value="${contributor.name}">Add
@@ -85,7 +86,8 @@
 				</div>
 				<div class="form-group">
 					<div class="col-sm-offset-2 col-sm-10">
-						<button class="btn btn-primary fa fa-save validate">&nbsp;Save</button>
+						<button type="button" onclick="javascript:updateIssue()"
+							class="btn btn-primary fa fa-save validate">&nbsp;Save</button>
 					</div>
 				</div>
 			</form>
@@ -99,16 +101,16 @@
 			<div class="col-md-9 col-md-offset-1 top-margin">
 				<div>
 					<ul class="timeline">
-						<li><i
-							class="fa fa-edit bg-green"></i>
+						<li id="contribform"><i class="fa fa-edit bg-green"></i>
 							<div class="timeline-item">
 								<h3 class="timeline-header">New contribution</h3>
 								<div class="timeline-body">
 									<form class="form-horizontal" role="form" action="issuelist"
 										method="post" data-parsley-validate="true" id="issueform">
-										<div class="summernote"></div>
-										<br/>
-										<button class="btn btn-primary fa fa-check validate">&nbsp;Contribute</button>
+										<div id="sncontrib" class="summernote"></div>
+										<br />
+										<button type="button" onclick="javascript:contribute()"
+											class="btn btn-primary fa fa-check validate">&nbsp;Contribute</button>
 									</form>
 								</div>
 							</div></li>
@@ -119,7 +121,8 @@
 									th:text="${#calendars.format(contrib.created,'dd. MMMM yyyy, hh:mm:ss')}"><i
 									class="fa fa-clock-o"></i>DATE</span>
 								<h3 class="timeline-header">
-									<a	th:href="@{/contributor/{id}(id=${contrib.contributor.name})}"
+									<a
+										th:href="@{/contributor/{id}(id=${contrib.contributor.name})}"
 										th:text="${contrib.contributor.name}">USER</a>
 									&nbsp;contributed to&nbsp; <a
 										th:href="@{/issue/{id}(id=${contrib.issue.id})}"
@@ -136,17 +139,16 @@
 
 	<script type="text/javascript" th:inline="javascript">
 		var issue = /*[[${issue.id}]]*/-1;
-		var me = /*[[${me.name}]]*/ "";
+		var me = /*[[${me.name}]]*/"";
+		var asgSelect = null;
 
 		$(document).ready(
 				function() {
-					$('.summernote').summernote({
-						height : 150
-					});
-					$('#select-beast').selectize({
+					asgSelect = $('#select-beast').selectize({
 						create : true,
 						sortField : 'text'
-					});
+					})[0].selectize;
+					
 					$('.datepicker').datepicker({
 						startDate : '-0d',
 						weekStart : 1,
@@ -180,30 +182,46 @@
 			if (data.open) {
 				document.getElementById("open").style.display = "none";
 				document.getElementById("close").style.display = "block";
+				
+				$(':input').attr("disabled",false);
+				
+				$('.summernote').summernote({
+					height : 150
+				});
+				$('#contribform').attr("style","display:block");
+
+				asgSelect.enable();
 			} else {
 				document.getElementById("open").style.display = "block";
 				document.getElementById("close").style.display = "none";
+				
+				$(':input').attr("disabled",true);
+				$('#contribform').attr("style","display:none");
+
+				$('.summernote').destroy();
+				asgSelect.disable();				
 			}
-			
+
 			var i = 0;
 			var foundMe = false;
-			if(data.watchers.length!=0){
-				do{
-					if(data.watchers[i].name == me)foundMe = true;
+			if (data.watchers.length != 0) {
+				do {
+					if (data.watchers[i].name == me)
+						foundMe = true;
 					i++;
-				} while(i!=data.watchers.length);
+				} while (i != data.watchers.length);
 			}
-			
-			if(foundMe) {
+
+			if (foundMe) {
 				document.getElementById("unwatch").style.display = "block";
 				document.getElementById("watch").style.display = "none";
 			} else {
 				document.getElementById("unwatch").style.display = "none";
 				document.getElementById("watch").style.display = "block";
 			}
-			
+
 		}
-		
+
 		function watch() {
 			$.ajax({
 				type : "GET",
@@ -215,7 +233,7 @@
 				contentType : "application/json"
 			});
 		};
-		
+
 		function unwatch() {
 			$.ajax({
 				type : "GET",
@@ -251,6 +269,50 @@
 				contentType : "application/json"
 			});
 		};
+
+		function updateIssue() {
+			if ($('#issueform').parsley().validate()) {
+
+				var formData = {
+					title : document.getElementById("title").value,
+					description : $('#sndesc').code(),
+					deadline : document.getElementById("deadline").value,
+					assignees : $("#select-beast").val()
+				};
+
+				if (document.getElementById("deadline").length != 0)
+					formData.deadlie = document.getElementById("deadline").value;
+
+				$.ajax({
+					type : "GET",
+					url : '/api/issues/' + issue + ':alter',
+					data : formData,
+					success : function(data) {
+						window.location.reload();
+					},
+					dataType : "json",
+					contentType : "application/json"
+				});
+			}
+		}
+
+		function contribute() {
+			var formData = {
+				content:  $('#sncontrib').code(),
+				issue: issue
+			};
+
+			$.ajax({
+				type : "GET",
+				url : '/api/issues/' + issue + ':contribute',
+				data : formData,
+				success : function(data) {
+					window.location.reload();
+				},
+				dataType : "json",
+				contentType : "application/json"
+			});
+		}
 	</script>
 
 </body>

@@ -8,7 +8,7 @@
 	<div th:replace="skeleton::nav"></div>
 
 	<div class=" container-fluid">
-		<table class="table table-striped">
+		<table class="table table-striped" id="tt">
 			<thead>
 				<tr>
 					<th>Issue</th>
@@ -19,21 +19,128 @@
 				</tr>
 			</thead>
 
-			<tbody>
-				<tr th:each="issue: ${issues}">
-					<td><a th:text="${'#'+issue.id+' '+issue.title}"
-						th:href="@{/issue/{id}(id=${issue.id})}">Issue</a></td>
-					<td th:text="${issue.lastChanged}">Latest activity</td>
-					<td th:text="${issue.deadline}">Deadline</td>
-					<td><span th:text="${issue.isOpen()} ? 'open' : 'closed'"
-						th:attr="class=${issue.isOpen() ? 'btn btn-success' : 'btn btn-danger'}">State</span></td>
-					<td><a
-						th:href="@{/issue/{parent}/createissue(parent=${issue.id})}">Create
-							child issue</a></td>
-				</tr>
+			<tbody id="issuetable">
+
 			</tbody>
 		</table>
 
 	</div>
+	<script type="text/javascript">
+		var pageNum = 1;
+		$(document).ready(function() {
+			addIssues()
+		});
+
+		function addIssues() {
+			$.ajax({
+				type : "GET",
+				url : '/api/issues',
+				data : {
+					page : pageNum
+				},
+				success : function(data) {
+					var last = null;
+
+					for (var i = 0; i != data.length; i++) {
+						document.getElementById("issuetable").appendChild(
+								last = issuerow(data[i]));
+					}
+					$(last).appear();
+					$(last).on('appear', function(event, elements) {
+						$(elements).off('appear');
+						pageNum += 1;
+						addIssues();
+					});
+					tree();
+				},
+				dataType : "json",
+				contentType : "application/json"
+			});
+		}
+
+		function tree() {
+			$("#tt")
+					.treetable(
+							{
+								expandable : true,
+								expanderTemplate : '<a class="fa fa-plus-square" href="#">&nbsp;&nbsp;</a>'
+							});
+		}
+
+		function issuerow(idata) {
+			var parentId = null;
+			if (idata.parent != null)
+				parentId = idata.parent.id;
+
+			var deadline = document.createElement('SPAN');
+			if (idata.deadline != null) {
+				var dist = idata.deadline - new Date().getTime();
+				if (Math.abs(dist) != dist) {
+					deadline.setAttribute("class","fa fa-warning");
+					deadline.setAttribute("style","color:red");
+					deadline.appendChild(txt(' '+$.format.date(idata.deadline, 'dd.MM.yyyy')+' (overdue)'));
+				} else {
+					deadline.appendChild(txt($.format.date(idata.deadline, 'dd.MM.yyyy')));
+				}
+			}
+
+			return tr(idata.id, parentId, [
+					td(titlelink(idata.id, idata.title)),
+					td(txt($.format.date(idata.lastChanged,
+							'dd.MM.yyyy HH:mm:ss'))),
+					td(deadline),
+					td(state(idata.open)), td(childlink(idata.id)) ]);
+		}
+
+		function state(isOpen) {
+			var span = document.createElement('SPAN');
+			if (isOpen) {
+				span.setAttribute('class', 'btn btn-success');
+				span.appendChild(txt('Open'));
+			} else {
+				span.setAttribute('class', 'btn btn-danger');
+				span.appendChild(txt('Closed'));
+			}
+
+			return span;
+		}
+
+		function tr(id, parentId, tds) {
+			var tr = document.createElement('TR');
+			tr.setAttribute("data-tt-id", id);
+			if (parentId != null)
+				tr.setAttribute("data-tt-parent-id", parentId);
+
+			for (var i = 0; i != tds.length; i++) {
+				tr.appendChild(tds[i]);
+			}
+
+			return tr;
+		}
+
+		function td(content) {
+			var td = document.createElement('TD');
+			td.appendChild(content);
+			return td;
+		}
+
+		function txt(str) {
+			return document.createTextNode(str);
+		}
+
+		function titlelink(id, title) {
+			var a = document.createElement('A');
+			a.href = '/issue/' + id;
+			a.appendChild(txt('#' + id + ' ' + title));
+			return a;
+		}
+
+		function childlink(parentId) {
+			var a = document.createElement('A');
+			a.href = '/issue/' + parentId + '/createissue';
+			a.appendChild(txt('Create child issue'));
+			return a;
+		}
+	</script>
 </body>
 </html>

@@ -41,6 +41,12 @@
 <!-- include parsley (validation) -->
 <script src="/js/parsley.min.js" type="text/javascript"></script>
 
+<!-- include data formatter -->
+<script src="/js/jquery-dateFormat.min.js" type="text/javascript"></script>
+
+<!-- include jquery-appear -->
+<script src="/js/jquery.appear.js" type="text/javascript"></script>
+
 <!-- include Chart.js -->
 <script src="/js/excanvas.js" type="text/javascript"></script>
 <script src="/js/Chart.min.js" type="text/javascript"></script>
@@ -53,38 +59,34 @@
 </head>
 <body>
 	<div class="jumbotron" th:fragment="jumbotron">
-		<div class="container">
-			<h1>
-				Got issues, <a th:href="@{/contributor/{id}(id=${me.name})}"
-					th:text="${me.name}">USER</a>?
-			</h1>
-		</div>
+		<h1>
+			Got issues, <a th:href="@{/contributor/{id}(id=${me.name})}"
+				th:text="${me.name}">USER</a>?
+		</h1>
 	</div>
 	<nav class="navbar navbar-inverse" role="navigation" th:fragment="nav">
 		<div class="container-fluid">
-			<div class="navbar-header">
-				<a class="navbar-brand" href="#">ST Group</a>
-			</div>
 			<div class="navbar-collapse collapse">
 				<ul class="nav navbar-nav navbar-left">
 					<li><a href="/issuelist"><i class="fa fa-list bg-black"></i>&nbsp;
 							List issues <span class="badge" th:text="${issuecount}"></span></a></li>
 					<li>
-							<button class="btn btn-default dropdown-toggle bg-black navbar-nav" type="button"
-								id="dropdownIssues" data-toggle="dropdown" style="margin:8px">
-								<span class="fa fa-heart"></span>&nbsp;My issues <span class="caret"></span>
-							</button>
-							<ul class="dropdown-menu" role="menu"
-								aria-labelledby="dropdownIssues">
-								<li role="presentation"><a role="menuitem" tabindex="-1"
-									href="issuelist?search=watched@"><i
-										class="fa fa-eye"></i>&nbsp; Watched issues <span
-										class="badge" th:text="${watchcount}"></span></a></li>
-								<li role="presentation"><a role="menuitem" tabindex="-1"
-									href="/issuelist?search=assigned@"><i
-										class="fa fa-pencil"></i>&nbsp; Assigned issues <span
-										class="badge" th:text="${assigncount}"></span></a></li>
-							</ul>
+						<button
+							class="btn btn-default dropdown-toggle bg-black navbar-nav"
+							type="button" id="dropdownIssues" data-toggle="dropdown"
+							style="margin: 8px">
+							<span class="fa fa-heart"></span>&nbsp;My issues <span
+								class="caret"></span>
+						</button>
+						<ul class="dropdown-menu" role="menu"
+							aria-labelledby="dropdownIssues">
+							<li role="presentation"><a role="menuitem" tabindex="-1"
+								href="/issuelist?search=watched@"><i class="fa fa-eye"></i>&nbsp;
+									Watched issues <span class="badge" th:text="${watchcount}"></span></a></li>
+							<li role="presentation"><a role="menuitem" tabindex="-1"
+								href="/issuelist?search=assigned@"><i class="fa fa-pencil"></i>&nbsp;
+									Assigned issues <span class="badge" th:text="${assigncount}"></span></a></li>
+						</ul>
 					</li>
 
 					<li><a href="/createissue"><i class="fa fa-plus bg-black"></i>&nbsp;
@@ -92,7 +94,8 @@
 					<li><a href="/userstats"><i class="fa fa-tasks bg-black"></i>&nbsp;
 							Users and statistics</a></li>
 				</ul>
-				<form class="navbar-form navbar-left" role="search" method="get" action="/issuelist">
+				<form class="navbar-form navbar-left" role="search" method="get"
+					action="/issuelist">
 					<div class="form-group">
 						<input th:attr="value=${search==null ? '' : search}" type="text"
 							class="form-control" id="search" name="search"
