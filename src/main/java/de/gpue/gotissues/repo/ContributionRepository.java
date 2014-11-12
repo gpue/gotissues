@@ -3,6 +3,8 @@ package de.gpue.gotissues.repo;
 import java.util.Date;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.Repository;
 import org.springframework.stereotype.Component;
@@ -19,9 +21,11 @@ public interface ContributionRepository extends  Repository<Contribution, Long> 
 	
 	List<Contribution> findAll();
 
+	Page<Contribution> findByIssueOrderByCreatedDesc(Issue issue,Pageable p);
 	List<Contribution> findByIssueOrderByCreatedDesc(Issue issue);
 	
-	List<Contribution> findByContributorOrderByCreatedDesc(Contributor contributor);
+	Page<Contribution> findByContributorOrderByCreatedDesc(Contributor contributor,Pageable p);
+	List<Contribution> findByContributorOrderByCreatedDesc(Contributor contributorp);
 	
 	List<Contribution> findByContentContaining(String search);
 	

@@ -25,7 +25,8 @@
 		</table>
 
 	</div>
-	<script type="text/javascript">
+	<script type="text/javascript" th:inline="javascript">
+		var searchNeedle = /*[[${search}]]*/"";
 		var pageNum = 1;
 		$(document).ready(function() {
 			addIssues()
@@ -36,7 +37,8 @@
 				type : "GET",
 				url : '/api/issues',
 				data : {
-					page : pageNum
+					page : pageNum,
+					search : searchNeedle
 				},
 				success : function(data) {
 					var last = null;
@@ -76,70 +78,22 @@
 			if (idata.deadline != null) {
 				var dist = idata.deadline - new Date().getTime();
 				if (Math.abs(dist) != dist) {
-					deadline.setAttribute("class","fa fa-warning");
-					deadline.setAttribute("style","color:red");
-					deadline.appendChild(txt(' '+$.format.date(idata.deadline, 'dd.MM.yyyy')+' (overdue)'));
+					deadline.setAttribute("class", "fa fa-warning");
+					deadline.setAttribute("style", "color:red");
+					deadline.appendChild(txt(' '
+							+ $.format.date(idata.deadline, 'dd.MM.yyyy')
+							+ ' (overdue)'));
 				} else {
-					deadline.appendChild(txt($.format.date(idata.deadline, 'dd.MM.yyyy')));
+					deadline.appendChild(txt($.format.date(idata.deadline,
+							'dd.MM.yyyy')));
 				}
 			}
 
 			return tr(idata.id, parentId, [
-					td(titlelink(idata.id, idata.title)),
+					td(issuelink(idata.id, idata.title)),
 					td(txt($.format.date(idata.lastChanged,
-							'dd.MM.yyyy HH:mm:ss'))),
-					td(deadline),
+							'dd.MM.yyyy HH:mm:ss'))), td(deadline),
 					td(state(idata.open)), td(childlink(idata.id)) ]);
-		}
-
-		function state(isOpen) {
-			var span = document.createElement('SPAN');
-			if (isOpen) {
-				span.setAttribute('class', 'btn btn-success');
-				span.appendChild(txt('Open'));
-			} else {
-				span.setAttribute('class', 'btn btn-danger');
-				span.appendChild(txt('Closed'));
-			}
-
-			return span;
-		}
-
-		function tr(id, parentId, tds) {
-			var tr = document.createElement('TR');
-			tr.setAttribute("data-tt-id", id);
-			if (parentId != null)
-				tr.setAttribute("data-tt-parent-id", parentId);
-
-			for (var i = 0; i != tds.length; i++) {
-				tr.appendChild(tds[i]);
-			}
-
-			return tr;
-		}
-
-		function td(content) {
-			var td = document.createElement('TD');
-			td.appendChild(content);
-			return td;
-		}
-
-		function txt(str) {
-			return document.createTextNode(str);
-		}
-
-		function titlelink(id, title) {
-			var a = document.createElement('A');
-			a.href = '/issue/' + id;
-			a.appendChild(txt('#' + id + ' ' + title));
-			return a;
-		}
-
-		function childlink(parentId) {
-			var a = document.createElement('A');
-			a.href = '/issue/' + parentId + '/createissue';
-			a.appendChild(txt('Create child issue'));
-			return a;
 		}
 	</script>
 </body>

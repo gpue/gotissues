@@ -63,31 +63,22 @@ public class GotIssuesController implements ErrorController {
 	@RequestMapping("/issuelist")
 	public String issuelist(
 			@RequestParam(value = "search", defaultValue="") String search,
-			@RequestParam(value = "page", required = false) Integer page,
 			Model model) {
-		model.addAttribute("issues", service.getIssues(page, search));
-		model.addAttribute("page", page != null ? page :1);
 		model.addAttribute("search", search);
-		model.addAttribute(
-				"pages",
-				(int) Math.ceil(service.getIssues(null, search).size()
-						/ GotIssuesRestController.PAGE_SIZE));
 		return skeleton("/issuelist", model);
 	}
 
 	@RequestMapping("/issue/{id}")
 	public String showIssue(@PathVariable("id") Long id, Model model) {
 		model.addAttribute("issue", service.getIssue(id));
-		model.addAttribute("contributions", service.getContributionsByIssue(id));
+		//model.addAttribute("contributions", service.getContributionsByIssue(id));
 		model.addAttribute("contributors", service.getContributors());
 		return skeleton("/showissue", model);
 	}
 
 	@RequestMapping("/contributor/{c}")
 	public String showContributor(@PathVariable("c") String c, Model model) {
-		model.addAttribute("contributor", service.getContributor(c));
-		model.addAttribute("contributions",
-				service.getContributionsByContributor(c));
+		model.addAttribute("contributor", service.getContributor(c));;
 		return skeleton("/showcontributor", model);
 	}
 

@@ -7,42 +7,65 @@
 	<div th:replace="skeleton::nav"></div>
 	<div class="container">
 		<div class="row">
-			<span class="h3">
-				Contributor <a href="#" th:text="${contributor.name}"></a><span th:if="${contributor.fullName}!=null" th:text="' ('+${contributor.fullName}+')'">NAME</span>
-				<a th:if="${me.isAdmin()} == true" th:href="@{/account/{id}(id=${contributor.name})}" class="btn btn-primary fa fa-edit">&nbsp;Edit</a>
-				<a th:href="@{/issuelist(search=${'assigned@'+contributor.name})}" class="btn btn-primary fa fa-list">&nbsp;List assignments</a>
+			<span class="h3"> Contributor <a href="#"
+				th:text="${contributor.name}"></a><span
+				th:if="${contributor.fullName}!=null"
+				th:text="' ('+${contributor.fullName}+')'">NAME</span> <a
+				th:if="${me.isAdmin()} == true"
+				th:href="@{/account/{id}(id=${contributor.name})}"
+				class="btn btn-primary fa fa-edit">&nbsp;Edit</a> <a
+				th:href="@{/issuelist(search=${'assigned@'+contributor.name})}"
+				class="btn btn-primary fa fa-list">&nbsp;List assignments</a>
 			</span>
 		</div>
 	</div>
-	
+
 	<div class="row">&nbsp;</div>
-	
+
 	<div class="container">
 		<div class="row">
 			<div class="col-md-11 top-margin">
 				<div>
-					<ul class="timeline">
-						<li th:each="contrib : ${contributions}"><i
-							class="fa fa-edit bg-blue"></i>
-							<div class="timeline-item">
-								<span class="time"
-									th:text="${#calendars.format(contrib.created,'dd. MMMM yyyy, hh:mm:ss')}"><i
-									class="fa fa-clock-o"></i>DATE</span>
-								<h3 class="timeline-header">
-									<a
-										th:href="@{/contributor/{id}(id=${contrib.contributor.name})}"
-										th:text="${contrib.contributor.name}">USER</a>
-									&nbsp;contributed to&nbsp; <a
-										th:href="@{/issue/{id}(id=${contrib.issue.id})}"
-										th:text="'#' + ${contrib.issue.id} + ' ' + ${contrib.issue.title}">ISSUE</a>
-								</h3>
-								<div class="timeline-body" th:utext="${contrib.content}">CONTENT</div>
-							</div></li>
-						<li><i class="fa fa-clock-o"></i></li>
+					<ul class="timeline" id="timeline">
 					</ul>
 				</div>
 			</div>
 		</div>
 	</div>
+
+	<script type="text/javascript" th:inline="javascript">
+		var contributor = /*[[${contributor.name}]]*/"";
+		var pageNum = 1;
+		
+		$(document).ready(function() {
+			addContributions();
+		});
+		
+		function addContributions() {
+			$.ajax({
+				type : "GET",
+				url : '/api/contributors/'+contributor+'/contributions',
+				data : {
+					page : pageNum
+				},
+				success : function(data) {
+					var last = null;
+
+					for (var i = 0; i != data.length; i++) {
+						document.getElementById("timeline").appendChild(
+								last = timelineEntry(data[i]));
+					}
+					$(last).appear();
+					$(last).on('appear', function(event, elements) {
+						$(elements).off('appear');
+						pageNum += 1;
+						addContributions();
+					});
+				},
+				dataType : "json",
+				contentType : "application/json"
+			});
+		}
+	</script>
 </body>
 </html>

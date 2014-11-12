@@ -11,14 +11,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import javax.validation.constraints.AssertTrue;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.util.Assert;
@@ -42,7 +41,7 @@ public class GotIssuesRestController {
 	private static final String WATCHED = "watched@";
 	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat(
 			"dd.MM.yyyy");
-	public static final int PAGE_SIZE = 20;
+	public static final int PAGE_SIZE = 5;
 	private static final String ASSIGNED = "assigned@";
 	private static final String NO_PWD = "********";
 
@@ -62,9 +61,10 @@ public class GotIssuesRestController {
 			@RequestParam(value = "page", required = false) Integer page,
 			@RequestParam(value = "search", defaultValue = "") String search) {
 		List<Issue> il = getIssues(search != null ? search : "");
+		if(page == null || page <= 1) page = 1;
 		return page == null ? il : il.subList(
-				Math.min(il.size() - 1, PAGE_SIZE * (page - 1)),
-				Math.min(il.size() - 1, PAGE_SIZE * page));
+				Math.min(il.size(), PAGE_SIZE * (page - 1)),
+				Math.min(il.size(), PAGE_SIZE * page));
 	}
 
 	@Cacheable("default")
@@ -91,7 +91,7 @@ public class GotIssuesRestController {
 				Contributor c = cn.length() == 0 ? getMe() : contributors
 						.findOne(cn);
 				if (c != null)
-					found.addAll(issues.findByWatchers(c));
+					found.addAll(issues.findByAssignees(c));
 			} else {
 				Contributor c = contributors.findOne(s);
 				contributions.findByContributorOrderByCreatedDesc(c).forEach(
@@ -304,7 +304,7 @@ public class GotIssuesRestController {
 		return contribute(content, issue, getMe().getName(), true, 3);
 	}
 
-	// @CacheEvict("default")
+	@CacheEvict("default")
 	private Contribution contribute(String content, Long issue,
 			String contributor, Boolean revisable, int points) {
 		Contribution c = new Contribution(content, new Date(), getIssue(issue),
@@ -341,8 +341,15 @@ public class GotIssuesRestController {
 	}
 
 	@RequestMapping("/issues/{i}/contributions")
-	public List<Contribution> getContributionsByIssue(@PathVariable("i") Long id) {
-		return contributions.findByIssueOrderByCreatedDesc(getIssue(id));
+	public List<Contribution> getContributionsByIssue(
+			@PathVariable("i") Long id,
+			@RequestParam(value = "page", required = false) Integer page) {
+		if (page != null) {
+			return contributions.findByIssueOrderByCreatedDesc(getIssue(id),
+					new PageRequest(page - 1, PAGE_SIZE)).getContent();
+		} else {
+			return contributions.findByIssueOrderByCreatedDesc(getIssue(id));
+		}
 	}
 
 	@RequestMapping("/contributors")
@@ -429,13 +436,13 @@ public class GotIssuesRestController {
 
 			Integer points = contributions.getPoints(c, start);
 
-			int assigned = 0;
-			cds.add(new ChartDataSet("in time", assigned = issues
+			int assigned = issues
 					.countByAssigneesAndDeadlineBefore(c, new Date(
-							Long.MAX_VALUE)), "Green", "lightgreen"));
-			cds.add(new ChartDataSet("overdue", assigned
-					- issues.countByAssigneesAndDeadlineBefore(c, new Date()),
-					"Red", "Orange"));
+							Long.MAX_VALUE));
+			int overdue = assigned
+					- issues.countByAssigneesAndDeadlineBefore(c, new Date());
+			cds.add(new ChartDataSet("in time", assigned-overdue, "Green", "lightgreen"));
+			cds.add(new ChartDataSet("overdue", overdue, "Red", "Orange"));
 
 			result.add(new ContributorStats(c.getName(), points == null ? 0
 					: points, cds));
@@ -538,9 +545,16 @@ public class GotIssuesRestController {
 
 	@RequestMapping("/contributors/{c}/contributions")
 	public List<Contribution> getContributionsByContributor(
-			@PathVariable("c") String c) {
-		return contributions
-				.findByContributorOrderByCreatedDesc(getContributor(c));
+			@PathVariable("c") String c,
+			@RequestParam(value = "page", required = false) Integer page) {
+		if (page != null) {
+			return contributions.findByContributorOrderByCreatedDesc(
+					getContributor(c), new PageRequest(page - 1, PAGE_SIZE))
+					.getContent();
+		} else {
+			return contributions
+					.findByContributorOrderByCreatedDesc(getContributor(c));
+		}
 	}
 
 	@RequestMapping("/contributors/{c}")
