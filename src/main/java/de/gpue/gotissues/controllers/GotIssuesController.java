@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import de.gpue.gotissues.bo.Contributor;
 
 @Controller
-@RequestMapping("/gotissues")
 public class GotIssuesController implements ErrorController {
 	@Autowired
 	private GotIssuesRestController service;
