@@ -36,7 +36,7 @@ import de.gpue.gotissues.repo.IssueRepository;
 import de.gpue.gotissues.util.MailUtil;
 
 @RestController
-@RequestMapping(value = "/api")
+@RequestMapping(value = "/gotissues/api")
 public class GotIssuesRestController {
 	private static final String WATCHED = "watched@";
 	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat(
