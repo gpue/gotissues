@@ -83,7 +83,7 @@
 											.getElementById(c.contributor);
 									var ctx = canvas.getContext("2d");
 									
-									if (c.data[0].value==0 && c.data[1].value==0) {
+									if (c.data[0].value==0 && c.data[1].value==0 && c.data[2].value==0) {
 										new Chart(ctx).Doughnut([{label:"none",color:"lightgrey",value:100}], {});
 									} else {
 										new Chart(ctx).Doughnut(c.data, {});

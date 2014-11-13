@@ -61,7 +61,8 @@ public class GotIssuesRestController {
 			@RequestParam(value = "page", required = false) Integer page,
 			@RequestParam(value = "search", defaultValue = "") String search) {
 		List<Issue> il = getIssues(search != null ? search : "");
-		if(page == null || page <= 1) page = 1;
+		if (page == null || page <= 1)
+			page = 1;
 		return page == null ? il : il.subList(
 				Math.min(il.size(), PAGE_SIZE * (page - 1)),
 				Math.min(il.size(), PAGE_SIZE * page));
@@ -316,11 +317,10 @@ public class GotIssuesRestController {
 				.getIssue().getWatchers())) {
 			Contributor r = (Contributor) or;
 			try {
-				MailUtil.sendHTMLMail(
-						r.getMail(),
-						contributor + " conributed to issue " + c.getIssue(),
-						"<h4>" + contributor + " conributed to issue "
-								+ c.getIssue() + "</h4>" + c.getContent());
+				MailUtil.sendHTMLMail(r.getMail(), contributor
+						+ " conributed to issue " + c.getIssue(), "<h4>"
+						+ contributor + " conributed to issue " + c.getIssue()
+						+ "</h4>" + c.getContent());
 			} catch (Exception e) {
 				log.error("could not send mail to: "
 						+ c.getContributor().getMail(), e);
@@ -435,15 +435,13 @@ public class GotIssuesRestController {
 
 			Integer points = contributions.getPoints(c, start);
 
-			int assigned = issues
-					.countByAssigneesAndDeadlineBefore(c, new Date(
-							Long.MAX_VALUE));
-			int overdue = assigned
-					- issues.countByAssigneesAndDeadlineBefore(c, new Date());
-			int undated = issues.countByAssigneesAndDeadlineIsNull(c);
-			cds.add(new ChartDataSet("in time", assigned-overdue, "Green", "lightgreen"));
+			int intime = issues.countByAssigneesAndDeadlineAfter(c, new Date());
+			int overdue = issues.countByAssigneesAndDeadlineBefore(c, new Date());
+			int assigned = issues.countByAssignees(c);
+			cds.add(new ChartDataSet("in time", intime, "Green",
+					"lightgreen"));
 			cds.add(new ChartDataSet("overdue", overdue, "Red", "Orange"));
-			cds.add(new ChartDataSet("undated", undated, "DodgerBlue", "LightSkyBlue"));
+			cds.add(new ChartDataSet("undated", assigned,"DodgerBlue", "LightSkyBlue"));
 
 			result.add(new ContributorStats(c.getName(), points == null ? 0
 					: points, cds));
