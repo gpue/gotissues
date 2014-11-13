@@ -23,7 +23,8 @@ public interface IssueRepository extends Repository<Issue, Long>{
 
 	
 	public Issue save(Issue i);
-	
+
+	int countByAssigneesAndDeadlineIsNull(Contributor assigneee);
 	int countByAssigneesAndDeadlineBefore(Contributor assignee,Date deadline);
 	int count();
 }

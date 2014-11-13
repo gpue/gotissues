@@ -317,7 +317,6 @@ public class GotIssuesRestController {
 			Contributor r = (Contributor) or;
 			try {
 				MailUtil.sendHTMLMail(
-						getContributor("admin").getMail(),
 						r.getMail(),
 						contributor + " conributed to issue " + c.getIssue(),
 						"<h4>" + contributor + " conributed to issue "
@@ -441,8 +440,10 @@ public class GotIssuesRestController {
 							Long.MAX_VALUE));
 			int overdue = assigned
 					- issues.countByAssigneesAndDeadlineBefore(c, new Date());
+			int undated = issues.countByAssigneesAndDeadlineIsNull(c);
 			cds.add(new ChartDataSet("in time", assigned-overdue, "Green", "lightgreen"));
 			cds.add(new ChartDataSet("overdue", overdue, "Red", "Orange"));
+			cds.add(new ChartDataSet("undated", undated, "DodgerBlue", "LightSkyBlue"));
 
 			result.add(new ContributorStats(c.getName(), points == null ? 0
 					: points, cds));
