@@ -333,8 +333,12 @@ public class GotIssuesRestController {
 		c.getContributor().setLastContribution(c.getCreated());
 		contributors.save(c.getContributor());
 
-		c.getIssue().setLastChanged(c.getCreated());
-		issues.save(c.getIssue());
+		Issue update = c.getIssue();
+		while (update != null) {
+			update.setLastChanged(c.getCreated());
+			issues.save(update);
+			update = update.getParent();
+		}
 
 		return c;
 	}
@@ -436,12 +440,13 @@ public class GotIssuesRestController {
 			Integer points = contributions.getPoints(c, start);
 
 			int intime = issues.countByAssigneesAndDeadlineAfter(c, new Date());
-			int overdue = issues.countByAssigneesAndDeadlineBefore(c, new Date());
+			int overdue = issues.countByAssigneesAndDeadlineBefore(c,
+					new Date());
 			int assigned = issues.countByAssignees(c);
-			cds.add(new ChartDataSet("in time", intime, "Green",
-					"lightgreen"));
+			cds.add(new ChartDataSet("in time", intime, "Green", "lightgreen"));
 			cds.add(new ChartDataSet("overdue", overdue, "Red", "Orange"));
-			cds.add(new ChartDataSet("undated", assigned,"DodgerBlue", "LightSkyBlue"));
+			cds.add(new ChartDataSet("undated", assigned, "DodgerBlue",
+					"LightSkyBlue"));
 
 			result.add(new ContributorStats(c.getName(), points == null ? 0
 					: points, cds));
