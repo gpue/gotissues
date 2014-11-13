@@ -41,7 +41,7 @@ public class GotIssuesRestController {
 	private static final String WATCHED = "watched@";
 	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat(
 			"dd.MM.yyyy");
-	public static final int PAGE_SIZE = 5;
+	public static final int PAGE_SIZE = 20;
 	private static final String ASSIGNED = "assigned@";
 	private static final String NO_PWD = "********";
 
