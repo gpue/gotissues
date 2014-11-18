@@ -18,7 +18,6 @@ function deleteIssue(i) {
 		type : "GET",
 		url : '/api/issues/' + i + ':delete',
 		success : function(data) {
-			alert("issue deleted");
 			window.location.href = "/issuelist";
 		},
 		error: function(jqxhr,status,msg) {
