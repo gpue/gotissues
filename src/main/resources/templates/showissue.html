@@ -115,7 +115,7 @@
 										<div id="sncontrib" class="summernote"></div>
 										<br />
 										<button type="button" onclick="javascript:contribute()"
-											class="btn btn-primary fa fa-check validate">&nbsp;Contribute</button>
+											class="btn btn-primary fa fa-check validate submit">&nbsp;Contribute</button>
 									</form>
 								</div>
 							</div></li>
@@ -205,7 +205,7 @@
 
 				$(':input').attr("disabled", false);
 				
-				$(':button').attr("style", "display:block");
+				$('.submit').attr("style", "display:block");
 
 				$('.summernote').summernote({
 					height : 150
@@ -220,7 +220,7 @@
 				$(':input').attr("disabled", true);
 				$('#contribform').attr("style", "display:none");
 				
-				$(':button').attr("style", "display:none");
+				$('.submit').attr("style", "display:none");
 
 				$('.summernote').destroy();
 				asgSelect.disable();
