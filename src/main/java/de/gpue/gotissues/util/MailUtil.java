@@ -9,9 +9,16 @@ import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
-public class MailUtil {
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
+public class MailUtil {
+	
+	private static final Log log = LogFactory.getLog(MailUtil.class);
+	
 	public static void sendHTMLMail(String from, String to, String subject, String text) {
+		log.info("mail from "+from+" to "+to+"with subject '"+subject+"':\n"+text);
+		
 		// Assuming you are sending email from localhost
 		String host = "localhost";
 

@@ -78,7 +78,7 @@
 					<div class="col-sm-10">
 						<input class="datepicker form-control"
 							data-date-format="dd.mm.yyyy" id="deadline" name="deadline"
-							th:value="${issue.deadline} != null ? ${#calendars.format(issue.deadline,'dd. MMMM yyyy, hh:mm:ss')}"></input>
+							th:value="${issue.deadline} != null ? ${#calendars.format(issue.deadline,'dd.MM.yyyy')}"></input>
 					</div>
 				</div>
 				<div class="form-group">
@@ -143,7 +143,8 @@
 						weekStart : 1,
 						todayHighlight : true,
 						todayBtn : true,
-						autoclose : true
+						autoclose : true,
+						dateFormat: 'dd.mm.yyyy'
 					});
 
 					$('#issueform').parsley().subscribe(

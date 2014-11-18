@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.logging.Log;
@@ -161,13 +162,15 @@ public class GotIssuesRestController {
 
 		Issue ir = issues.save(i);
 
-		contribute("<h4>Issue created: " + title + "</h4>" + description
-				+ "<h4>Assignees:</h4>" + assignees(assignees), ir.getId(),
-				getMe().getName(), false, 3);
+		contribute(getMe().getName() + " created a new issue: " + ir,
+				"<h4>Issue created: " + title + "</h4>" + description
+						+ "<h4>Assignees:</h4>" + assignees(assignees),
+				ir.getId(), getMe().getName(), false, 3);
 
 		return ir;
 	}
 
+	@SuppressWarnings("unchecked")
 	@RequestMapping(value = "/issues/{i}:alter", method = { RequestMethod.GET,
 			RequestMethod.POST })
 	@CacheEvict("default")
@@ -175,6 +178,7 @@ public class GotIssuesRestController {
 			@PathVariable("i") Long id,
 			@RequestParam(value = "title", required = false) String title,
 			@RequestParam(value = "description", required = false) String description,
+			@RequestParam(value = "deadline", required = false) String deadline,
 			@RequestParam(value = "assignees[]", required = false) List<String> assignees) {
 		Issue i = issues.findOne(id);
 
@@ -183,21 +187,72 @@ public class GotIssuesRestController {
 
 		Assert.isTrue(i.isOpen(), "Issue is closed!");
 
-		if (title != null)
+		StringBuffer content = new StringBuffer("<ul>");
+
+		if (title != null && !title.equals(i.getTitle())) {
+			content.append("<li><strong>New title: </strong>" + title + "</li>");
 			i.setTitle(title);
-		if (description != null)
-			i.setDescription(description);
-		if (assignees != null) {
-			i.setAssignees(new HashSet<>());
-			assignees.forEach(a -> i.getAssignees()
-					.add(contributors.findOne(a)));
 		}
+		if (description != null && !description.equals(i.getDescription())) {
+			content.append("<li><strong>New description: </strong>"
+					+ description + "</li>");
+			i.setDescription(description);
+		}
+		if (deadline != null) {
+			Date dlObj = null;
+			try {
+				dlObj = DATE_FORMAT.parse(deadline);
+			} catch (ParseException e) {
+				e.printStackTrace();
+			}
+
+			if (i.getDeadline() == null) {
+				if (dlObj != null) {
+					content.append("<li>strong>New deadline: </strong>"
+							+ deadline + "</li>");
+					i.setDeadline(dlObj);
+				}
+			} else {
+				if (dlObj == null) {
+					content.append("<li><strong>Removed deadline </strong>"
+							+ deadline + "</li>");
+				} else {
+					content.append("<li><strong>Shifted deadline from </strong>"
+							+ DATE_FORMAT.format(i.getDeadline())
+							+ " to "
+							+ deadline + "</li>");
+				}
+			}
+		}
+		if (assignees != null) {
+			Set<String> oldCl = i.getAssignees().stream().map(a -> a.getName())
+					.collect(Collectors.toSet());
+
+			List<String> addCl = (List<String>) CollectionUtils
+					.subtract(assignees, oldCl).stream().map(e -> "" + e)
+					.collect(Collectors.toList());
+			List<String> remCl = (List<String>) CollectionUtils
+					.subtract(oldCl, assignees).stream().map(e -> "" + e)
+					.collect(Collectors.toList());
+
+			if (!addCl.isEmpty())
+				content.append("<li><strong>Newly assigned:</strong>"
+						+ assignees(addCl) + "</li>");
+			if (!remCl.isEmpty())
+				content.append("<li><strong>Removed assignee(s):</strong>"
+						+ assignees(remCl) + "</li>");
+
+			i.setAssignees(assignees.stream().map(s -> contributors.findOne(s))
+					.collect(Collectors.toSet()));
+		}
+
+		content.append("</ul>");
 
 		issues.save(i);
 
-		contribute("<h4>Issue changed: " + title + "</h4>" + description
-				+ "<h4>Assignees:</h4>" + assignees(assignees), id, getMe()
-				.getName(), false, 2);
+		contribute(getMe().getName() + " changed issue " + i,
+				"<h4>Issue changed:</h4>" + content, id, getMe().getName(),
+				false, 2);
 
 		return i;
 	}
@@ -240,30 +295,13 @@ public class GotIssuesRestController {
 		return b.toString();
 	}
 
-	@RequestMapping(value = "/issues/{i}:deadline", method = {
-			RequestMethod.GET, RequestMethod.POST })
-	public Issue setDeadline(@PathVariable("i") Long id,
-			@RequestParam("deadline") String deadline) throws ParseException {
-		Issue i = issues.findOne(id);
-
-		Assert.isTrue(i.isOpen(), "Issue is !");
-
-		i.setDeadline(DATE_FORMAT.parse(deadline));
-
-		issues.save(i);
-
-		contribute("<h4>Changed deadline to " + deadline + "</h4>", id, getMe()
-				.getName(), false, 1);
-
-		return i;
-	}
-
 	@RequestMapping(value = "/issues/{i}:close", method = { RequestMethod.GET,
 			RequestMethod.POST })
 	public Issue closeIssue(@PathVariable("i") Long id) {
 		Issue i = issues.findOne(id);
 
-		contribute("<h4>Issue closed.</h4>", id, getMe().getName(), false, 1);
+		contribute(getMe() + " closed issue " + i, "<h4>Issue closed.</h4>",
+				id, getMe().getName(), false, 1);
 
 		i.setOpen(false);
 
@@ -284,7 +322,8 @@ public class GotIssuesRestController {
 
 		issues.save(i);
 
-		contribute("<h4>Issue re-opened.</h4>", id, getMe().getName(), false, 1);
+		contribute(getMe() + " re-opened issue " + i,
+				"<h4>Issue re-opened.</h4>", id, getMe().getName(), false, 1);
 
 		if (i.getParent() != null)
 			openIssue(i.getParent().getId());
@@ -328,7 +367,8 @@ public class GotIssuesRestController {
 	private Contribution contribute(
 			@RequestParam(value = "content", defaultValue = "") String content,
 			@RequestParam("issue") Long issue) {
-		return contribute(content, issue, getMe().getName(), true, 3);
+		return contribute(getMe().getName() + " contributed to " + issue,
+				content, issue, getMe().getName(), true, 3);
 	}
 
 	@RequestMapping(value = "/contributions/{id}:delete", method = {
@@ -341,8 +381,8 @@ public class GotIssuesRestController {
 	}
 
 	@CacheEvict("default")
-	private Contribution contribute(String content, Long issue,
-			String contributor, Boolean revisable, int points) {
+	private Contribution contribute(String mailSubject, String content,
+			Long issue, String contributor, Boolean revisable, int points) {
 		Contribution c = new Contribution(content, new Date(), getIssue(issue),
 				getContributor(contributor), revisable, points);
 
@@ -352,10 +392,8 @@ public class GotIssuesRestController {
 				.getIssue().getWatchers())) {
 			Contributor r = (Contributor) or;
 			try {
-				MailUtil.sendHTMLMail(notifierMail, r.getMail(), contributor
-						+ " conributed to issue " + c.getIssue(), "<h4>"
-						+ contributor + " conributed to issue " + c.getIssue()
-						+ "</h4>" + c.getContent());
+				MailUtil.sendHTMLMail(notifierMail, r.getMail(), mailSubject,
+						content);
 			} catch (Exception e) {
 				log.error("could not send mail to: "
 						+ c.getContributor().getMail(), e);
