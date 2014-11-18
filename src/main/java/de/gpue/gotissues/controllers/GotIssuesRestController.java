@@ -58,8 +58,6 @@ public class GotIssuesRestController {
 	@Value("${gotissues.notifier.mail}")
 	private String notifierMail = "";
 
-	private final Log log = LogFactory.getLog(getClass());
-
 	@RequestMapping("/issues")
 	public List<Issue> getIssues(
 			@RequestParam(value = "page", required = false) Integer page,
@@ -364,7 +362,7 @@ public class GotIssuesRestController {
 
 	@RequestMapping(value = "/issues/{i}:contribute", method = {
 			RequestMethod.GET, RequestMethod.POST })
-	private Contribution contribute(
+	public Contribution contribute(
 			@RequestParam(value = "content", defaultValue = "") String content,
 			@RequestParam("issue") Long issue) {
 		return contribute(getMe().getName() + " contributed to " + issue,

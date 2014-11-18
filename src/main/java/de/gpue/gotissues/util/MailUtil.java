@@ -17,7 +17,7 @@ public class MailUtil {
 	private static final Log log = LogFactory.getLog(MailUtil.class);
 	
 	public static void sendHTMLMail(String from, String to, String subject, String text) {
-		log.info("mail from "+from+" to "+to+"with subject '"+subject+"':\n"+text);
+		log.info("mail from "+from+" to "+to+" with subject '"+subject+"':\n"+text);
 		
 		// Assuming you are sending email from localhost
 		String host = "localhost";
