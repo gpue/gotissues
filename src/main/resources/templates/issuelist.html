@@ -7,6 +7,7 @@
 	<div th:replace="skeleton::jumbotron"></div>
 	<div th:replace="skeleton::nav"></div>
 
+	<div th:replace="skeleton::shout"></div>
 	<div class=" container-fluid">
 		<table class="table table-striped" id="tt">
 			<thead>
@@ -54,6 +55,9 @@
 						addIssues();
 					});
 					tree();
+				},
+				error : function(){
+					shout("danger","Error!","Issues could be be retrieved.");
 				},
 				dataType : "json",
 				contentType : "application/json"

@@ -20,6 +20,7 @@ public interface IssueRepository extends Repository<Issue, Long>{
 	public List<Issue> findByWatchers(Contributor watcher);
 	public List<Issue> findByAssignees(Contributor assignee);
 	public List<Issue> findByParentOrderByLastChangedDesc(Issue parent);
+	void delete(Long id);
 
 	
 	public Issue save(Issue i);

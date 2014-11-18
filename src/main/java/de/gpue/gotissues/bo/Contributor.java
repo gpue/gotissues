@@ -14,7 +14,7 @@ import javax.validation.constraints.Size;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import de.gpue.gotissues.bo.config.ContributorUserDetailsService;
+import de.gpue.gotissues.config.ContributorUserDetailsService;
 
 @Entity
 public class Contributor implements UserDetails {

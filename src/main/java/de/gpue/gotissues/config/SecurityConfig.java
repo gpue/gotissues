@@ -1,4 +1,4 @@
-package de.gpue.gotissues.bo.config;
+package de.gpue.gotissues.config;
 
 import java.io.IOException;
 

@@ -11,12 +11,6 @@ import javax.mail.internet.MimeMessage;
 
 public class MailUtil {
 
-	public static final String STD_FROM = "gotissues-notification@gottissues.org";
-	
-	public static void sendHTMLMail(String to, String subject, String text) {
-		sendHTMLMail(STD_FROM, to, subject, text);
-	}
-	
 	public static void sendHTMLMail(String from, String to, String subject, String text) {
 		// Assuming you are sending email from localhost
 		String host = "localhost";

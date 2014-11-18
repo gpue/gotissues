@@ -16,7 +16,8 @@ import de.gpue.gotissues.bo.Issue;
 @Component("contributions")
 public interface ContributionRepository extends  Repository<Contribution, Long> {
 	Contribution save(Contribution entry);
-
+	void delete(Long id);
+	
 	Contribution findOne(Long id);
 	
 	List<Contribution> findAll();

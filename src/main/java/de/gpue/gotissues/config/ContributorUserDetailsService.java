@@ -1,4 +1,4 @@
-package de.gpue.gotissues.bo.config;
+package de.gpue.gotissues.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;

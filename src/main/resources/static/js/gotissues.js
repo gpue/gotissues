@@ -1,3 +1,49 @@
+function deleteContribution(c){
+	$.ajax({
+		type : "GET",
+		url : '/api/contributions/' + c + ':delete',
+		success : function(data) {
+			window.location.reload();
+		},
+		error: function() {
+			shout("error","Error!","Deleting contribution failed.");
+		},
+		dataType : "json",
+		contentType : "application/json"
+	});
+}
+
+function deleteIssue(i) {
+	$.ajax({
+		type : "GET",
+		url : '/api/issues/' + i + ':delete',
+		success : function(data) {
+			alert("issue deleted");
+			window.location.href = "/issuelist";
+		},
+		error: function(jqxhr,status,msg) {
+			shout("error","Error!","Deleting issue failed.");
+		},
+		dataType : "json",
+		contentType : "application/json"
+	});
+};
+
+function shout(type,heading,message){
+	if(type == 'error'){
+		type = 'danger';
+	}
+	
+	var div = document.createElement('DIV');
+	div.setAttribute("role","alert");
+	div.setAttribute("class",'alert alert-'+type);
+	var strong = document.createElement('STRONG');
+	strong.appendChild(txt(heading));
+	div.appendChild(strong);
+	div.appendChild(txt(' '+message));
+	document.getElementById('shout').appendChild(div);
+}
+
 function state(isOpen) {
 	var span = document.createElement('SPAN');
 	if (isOpen) {
@@ -74,9 +120,22 @@ function timelineEntry(cdata){
 	x.appendChild(txt(' contributed to '));
 	x.appendChild(issuelink(cdata.issue.id,cdata.issue.title));
 	wrap.appendChild(x);
+
+
+	
 	x = document.createElement('DIV');
 	x.setAttribute("class","timeline-body");
 	$(x).html(cdata.content);
+	wrap.appendChild(x);
+	
+	x = document.createElement('DIV');
+	x.setAttribute("class","timeline-footer");
+	var adel = document.createElement('A');
+	adel.setAttribute("href",'javascript:deleteContribution('+cdata.id+')');
+	adel.setAttribute("class","delc btn btn-danger fa fa-eraser col-sm-2");
+	adel.setAttribute("style","display:none");
+	adel.appendChild(txt("Delete"));
+	x.appendChild(adel);
 	wrap.appendChild(x);
 	return li;
 }

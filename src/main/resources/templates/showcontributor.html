@@ -5,6 +5,7 @@
 <body>
 	<div th:replace="skeleton::jumbotron"></div>
 	<div th:replace="skeleton::nav"></div>
+	<div th:replace="skeleton::shout"></div>
 	<div class="container">
 		<div class="row">
 			<span class="h3"> Contributor <a href="#"
@@ -61,6 +62,9 @@
 						pageNum += 1;
 						addContributions();
 					});
+				},
+				error: function(){
+					shout("error","Error!","Could not retrieve contribtions!");
 				},
 				dataType : "json",
 				contentType : "application/json"

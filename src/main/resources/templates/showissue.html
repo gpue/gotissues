@@ -6,6 +6,7 @@
 	<div th:replace="skeleton::jumbotron"></div>
 	<div th:replace="skeleton::nav"></div>
 
+	<div th:replace="skeleton::shout"></div>
 	<div class="container">
 		<div class="row col-md-10">
 
@@ -31,6 +32,10 @@
 								watched by you&nbsp; <a href="javascript:unwatch();"
 								class="btn btn-danger fa fa-check">&nbsp;Unwatch</a>
 						</span>
+						</span>
+						<span th:if="${me.isAdmin()}"  class="h5 col-sm-1" style="padding: 12px">
+							<a href="javascript:deleteIssue(issue);"
+								class="btn btn-danger fa fa-eraser">&nbsp;Delete</a>
 						</span>
 					</div>
 				</div>
@@ -122,11 +127,12 @@
 	<script type="text/javascript" th:inline="javascript">
 		var issue = /*[[${issue.id}]]*/-1;
 		var me = /*[[${me.name}]]*/"";
+		var admin = /*[[${me.isAdmin()}]]*/false;
 		var asgSelect = null;
 		var pageNum = 1;
 
 		$(document).ready(
-				function() {
+				function() {				
 					asgSelect = $('#select-beast').selectize({
 						create : true,
 						sortField : 'text'
@@ -182,6 +188,10 @@
 						pageNum += 1;
 						addContributions();
 					});
+					if(admin){				
+
+						$(".delc").attr("style","display:block");
+					}
 				},
 				dataType : "json",
 				contentType : "application/json"
@@ -247,6 +257,8 @@
 				contentType : "application/json"
 			});
 		};
+		
+		
 
 		function unwatch() {
 			$.ajax({
@@ -322,6 +334,9 @@
 				data : formData,
 				success : function(data) {
 					window.location.reload();
+				},
+				error: function(){
+					shout("error","Error!","Contribution failed.")
 				},
 				dataType : "json",
 				contentType : "application/json"

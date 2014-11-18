@@ -15,6 +15,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
@@ -53,6 +54,8 @@ public class GotIssuesRestController {
 	private ContributionRepository contributions;
 	@Autowired
 	private PasswordEncoder encoder;
+	@Value("${gotissues.notifier.mail}")
+	private String notifierMail = "";
 
 	private final Log log = LogFactory.getLog(getClass());
 
@@ -199,6 +202,29 @@ public class GotIssuesRestController {
 		return i;
 	}
 
+	@RequestMapping(value = "/issues/{i}:delete", method = { RequestMethod.GET,
+			RequestMethod.POST })
+	@CacheEvict("default")
+	public boolean deleteIssue(@PathVariable("i") Long id) {
+		Assert.isTrue(getMe().isAdmin());
+		Assert.notNull(id);
+
+		Issue issue = issues.findOne(id);
+
+		for (Issue c : issues.findByParentOrderByLastChangedDesc(issue)) {
+			deleteIssue(c.getId());
+		}
+
+		for (Contribution c : contributions
+				.findByIssueOrderByCreatedDesc(issue)) {
+			contributions.delete(c.getId());
+		}
+
+		issues.delete(id);
+
+		return true;
+	}
+
 	private String assignees(List<String> assignees) {
 		if (assignees == null || assignees.isEmpty())
 			return "none";
@@ -305,6 +331,15 @@ public class GotIssuesRestController {
 		return contribute(content, issue, getMe().getName(), true, 3);
 	}
 
+	@RequestMapping(value = "/contributions/{id}:delete", method = {
+			RequestMethod.GET, RequestMethod.POST })
+	public boolean deleteContribution(@PathVariable("id") Long id) {
+		Assert.isTrue(getMe().isAdmin());
+		Assert.notNull(id);
+		contributions.delete(id);
+		return true;
+	}
+
 	@CacheEvict("default")
 	private Contribution contribute(String content, Long issue,
 			String contributor, Boolean revisable, int points) {
@@ -317,7 +352,7 @@ public class GotIssuesRestController {
 				.getIssue().getWatchers())) {
 			Contributor r = (Contributor) or;
 			try {
-				MailUtil.sendHTMLMail(r.getMail(), contributor
+				MailUtil.sendHTMLMail(notifierMail, r.getMail(), contributor
 						+ " conributed to issue " + c.getIssue(), "<h4>"
 						+ contributor + " conributed to issue " + c.getIssue()
 						+ "</h4>" + c.getContent());

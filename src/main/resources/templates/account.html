@@ -6,12 +6,7 @@
 <body>
 	<div th:replace="skeleton::jumbotron"></div>
 	<div th:replace="skeleton::nav"></div>
-	<div class="container col-md-5 col-md-offset-4" style="display: none"
-		id="alert">
-		<div class="alert alert-success">
-			<strong>Success!</strong> Account data has been saved!
-		</div>
-	</div>
+	<div th:replace="skeleton::shout"></div>
 	<div class=" container col-md-6 col-md-offset-3">
 		<form class="form-horizontal" method="post" role="form"
 			data-parsley-validate="true" id="form">
@@ -202,12 +197,14 @@
 							success : function(data) {
 								contributor = data.name;
 								updateForm(data);
+								shout("success","Success!","Contributor stored.");
+							},
+							error: function() {
+								shout("danger","Error!","Contributor cannot be stored.");
 							},
 							dataType : "json",
 							contentType : "application/json"
 						});
-
-						document.getElementById("alert").style.display = "block";
 					}
 				};
 			</script>

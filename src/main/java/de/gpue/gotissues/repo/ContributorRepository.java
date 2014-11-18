@@ -10,6 +10,7 @@ import de.gpue.gotissues.bo.Contributor;
 @Component("contributors")
 public interface ContributorRepository extends Repository<Contributor, String> {
 	List<Contributor> findAll();
+	void delete(String name);
 
 	Contributor findOne(String name);
 	Contributor save(Contributor entry);
