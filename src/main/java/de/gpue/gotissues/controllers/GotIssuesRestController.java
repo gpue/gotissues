@@ -214,7 +214,7 @@ public class GotIssuesRestController {
 				if (dlObj == null) {
 					content.append("<li><strong>Removed deadline </strong>"
 							+ deadline + "</li>");
-				} else {
+				} else if(!i.getDeadline().equals(dlObj)){
 					content.append("<li><strong>Shifted deadline from </strong>"
 							+ DATE_FORMAT.format(i.getDeadline())
 							+ " to "
@@ -365,7 +365,7 @@ public class GotIssuesRestController {
 	public Contribution contribute(
 			@RequestParam(value = "content", defaultValue = "") String content,
 			@RequestParam("issue") Long issue) {
-		return contribute(getMe().getName() + " contributed to " + issue,
+		return contribute(getMe().getName() + " contributed to issue #" + issue,
 				content, issue, getMe().getName(), true, 3);
 	}
 
