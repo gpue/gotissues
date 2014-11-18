@@ -395,8 +395,7 @@ public class GotIssuesRestController {
 				MailUtil.sendHTMLMail(notifierMail, r.getMail(), mailSubject,
 						content);
 			} catch (Exception e) {
-				log.error("could not send mail to: "
-						+ r.getMail(), e);
+				e.printStackTrace();
 			}
 
 		}
