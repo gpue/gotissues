@@ -396,7 +396,7 @@ public class GotIssuesRestController {
 						content);
 			} catch (Exception e) {
 				log.error("could not send mail to: "
-						+ c.getContributor().getMail(), e);
+						+ r.getMail(), e);
 			}
 
 		}
