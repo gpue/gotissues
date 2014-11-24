@@ -32,23 +32,29 @@
 								watched by you&nbsp; <a href="javascript:unwatch();"
 								class="btn btn-danger fa fa-check">&nbsp;Unwatch</a>
 						</span>
-						</span>
-						<span th:if="${me.isAdmin()}"  class="h5 col-sm-1" style="padding: 12px">
-							<a href="javascript:deleteIssue(issue);"
-								class="btn btn-danger fa fa-eraser">&nbsp;Delete</a>
+						</span> <span th:if="${me.isAdmin()}" class="h5 col-sm-1"
+							style="padding: 12px"> <a
+							href="javascript:deleteIssue(issue);"
+							class="btn btn-danger fa fa-eraser">&nbsp;Delete</a>
 						</span>
 					</div>
 				</div>
 
 
-				<div th:if="${issue.parent} != null" class="form-group">
-					<label for="parent" class="col-sm-2 control-label">Parent</label> <input
-						type="hidden" id="parent" name="parent"
-						th:value="${issue.parent.id}" />
+				<div class="form-group">
+					<label for="parent" class="col-sm-2 control-label">Parent</label>
 					<div class="col-sm-10">
-						<a class="form-control"
-							th:text="${'#' + issue.parent.id + ' ' + issue.parent.title}"
-							th:href="@{/issue/{id}(id=${issue.parent.id})}">PARENT</a>
+						<select id="parent" name="parent" class="form-control">
+							<option th:if="${issue.parent} != null" th:text="${issue.parent}"
+								th:value="${issue.parent.id}" selected="selected">PARENT</option>
+							<option th:if="${issue.parent} != null" value="-1">No
+								parent</option>
+							<option th:if="${issue.parent} == null" selected="selected" value="-1">No
+								parent</option>
+							<option th:each="pissue : ${issues}"
+								th:unless="${issue.parent}!=null and (${pissue.equals(issue)} or ${pissue.equals(issue.parent)})"
+								th:text="${pissue}" th:value="${pissue.id}">PARENT</option>
+						</select>
 					</div>
 				</div>
 				<div class="form-group">
@@ -132,8 +138,12 @@
 		var pageNum = 1;
 
 		$(document).ready(
-				function() {				
+				function() {
 					asgSelect = $('#select-beast').selectize({
+						create : true,
+						sortField : 'text'
+					})[0].selectize;
+					parentSelect = $('#parent').selectize({
 						create : true,
 						sortField : 'text'
 					})[0].selectize;
@@ -144,7 +154,7 @@
 						todayHighlight : true,
 						todayBtn : true,
 						autoclose : true,
-						dateFormat: 'dd.mm.yyyy'
+						dateFormat : 'dd.mm.yyyy'
 					});
 
 					$('#issueform').parsley().subscribe(
@@ -168,11 +178,11 @@
 					});
 					addContributions();
 				});
-		
+
 		function addContributions() {
 			$.ajax({
 				type : "GET",
-				url : '/api/issues/'+issue+'/contributions',
+				url : '/api/issues/' + issue + '/contributions',
 				data : {
 					page : pageNum
 				},
@@ -189,9 +199,9 @@
 						pageNum += 1;
 						addContributions();
 					});
-					if(admin){				
+					if (admin) {
 
-						$(".delc").attr("style","display:block");
+						$(".delc").attr("style", "display:block");
 					}
 				},
 				dataType : "json",
@@ -205,13 +215,15 @@
 				document.getElementById("close").style.display = "block";
 
 				$(':input').attr("disabled", false);
-				
+
 				$('.submit').attr("style", "display:block");
 
 				$('.summernote').summernote({
 					height : 150
 				});
 				$('#contribform').attr("style", "display:block");
+
+				parentSelect.enable();
 
 				asgSelect.enable();
 			} else {
@@ -220,10 +232,13 @@
 
 				$(':input').attr("disabled", true);
 				$('#contribform').attr("style", "display:none");
-				
+
 				$('.submit').attr("style", "display:none");
 
 				$('.summernote').destroy();
+
+				parentSelect.disable();
+
 				asgSelect.disable();
 			}
 
@@ -258,8 +273,6 @@
 				contentType : "application/json"
 			});
 		};
-		
-		
 
 		function unwatch() {
 			$.ajax({
@@ -303,12 +316,12 @@
 				var formData = {
 					title : document.getElementById("title").value,
 					description : $('#sndesc').code(),
-					deadline : document.getElementById("deadline").value,
-					assignees : $("#select-beast").val()
+					assignees : $("#select-beast").val(),
+					parent: document.getElementById("parent").value
 				};
 
 				if (document.getElementById("deadline").length != 0)
-					formData.deadlie = document.getElementById("deadline").value;
+					formData.deadline = document.getElementById("deadline").value;
 
 				$.ajax({
 					type : "GET",
@@ -336,8 +349,8 @@
 				success : function(data) {
 					window.location.reload();
 				},
-				error: function(){
-					shout("error","Error!","Contribution failed.")
+				error : function() {
+					shout("error", "Error!", "Contribution failed.")
 				},
 				dataType : "json",
 				contentType : "application/json"

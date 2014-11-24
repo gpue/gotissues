@@ -26,14 +26,14 @@ public class GotIssuesController implements ErrorController {
 	}
 
 	@RequestMapping("/userstats")
-	public String userstats(
+	public String userStats(
 			@RequestParam(value = "start", required = false) Long start,
 			Model model) {
 		return skeleton("/userstats", model);
 	}
 
 	@RequestMapping("/createaccount")
-	public String createaccount(Model model) {
+	public String createAccount(Model model) {
 		return skeleton("/account", model);
 	}
 
@@ -43,14 +43,16 @@ public class GotIssuesController implements ErrorController {
 	}
 
 	@RequestMapping("/issue/{parent}/createissue")
-	public String createissue(@PathVariable("parent") Long parent, Model model) {
+	public String createIssue(@PathVariable("parent") Long parent, Model model) {
 		model.addAttribute("parent", service.getIssue(parent));
 		model.addAttribute("contributors", service.getContributors());
+		model.addAttribute("issues", service.getIssues(""));
 		return skeleton("/createissue", model);
 	}
 
 	@RequestMapping("/createissue")
-	public String createissue(Model model) {
+	public String createIssue(Model model) {
+		model.addAttribute("issues", service.getIssues(""));
 		model.addAttribute("contributors", service.getContributors());
 		return skeleton("/createissue", model);
 	}
@@ -61,7 +63,7 @@ public class GotIssuesController implements ErrorController {
 	}
 
 	@RequestMapping("/issuelist")
-	public String issuelist(
+	public String issueList(
 			@RequestParam(value = "search", defaultValue="") String search,
 			Model model) {
 		model.addAttribute("search", search);
@@ -71,7 +73,7 @@ public class GotIssuesController implements ErrorController {
 	@RequestMapping("/issue/{id}")
 	public String showIssue(@PathVariable("id") Long id, Model model) {
 		model.addAttribute("issue", service.getIssue(id));
-		//model.addAttribute("contributions", service.getContributionsByIssue(id));
+		model.addAttribute("issues", service.getIssues(""));
 		model.addAttribute("contributors", service.getContributors());
 		return skeleton("/showissue", model);
 	}

@@ -13,8 +13,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
@@ -40,12 +38,14 @@ import de.gpue.gotissues.util.MailUtil;
 @RestController
 @RequestMapping(value = "/api")
 public class GotIssuesRestController {
+	private static final int PARENT_NONE = -1;
 	private static final String WATCHED = "watched@";
 	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat(
 			"dd.MM.yyyy");
 	public static final int PAGE_SIZE = 20;
 	private static final String ASSIGNED = "assigned@";
 	private static final String NO_PWD = "********";
+	private static final long DL_PREC = 1000 * 60 * 60 * 24;
 
 	@Autowired
 	private IssueRepository issues;
@@ -71,7 +71,7 @@ public class GotIssuesRestController {
 	}
 
 	@Cacheable("default")
-	private List<Issue> getIssues(String search) {
+	public List<Issue> getIssues(String search) {
 
 		Set<Issue> found = new HashSet<Issue>();
 
@@ -116,16 +116,19 @@ public class GotIssuesRestController {
 	}
 
 	private List<Issue> orderChildren(List<Issue> todo) {
-		List<Issue> result = new LinkedList<>();
+		List<Issue> result = new LinkedList<Issue>();
+		Set<Issue> done = new HashSet<Issue>();
 
 		while (!todo.isEmpty()) {
 			Issue head = todo.remove(0);
-			result.add(head);
-			List<Issue> children = issues
-					.findByParentOrderByLastChangedDesc(head);
-			todo.removeAll(children);
-			result.removeAll(children);
-			todo.addAll(0, children);
+			if (done.add(head)) {
+				result.add(head);
+				List<Issue> children = issues
+						.findByParentOrderByLastChangedDesc(head);
+				todo.removeAll(children);
+				result.removeAll(children);
+				todo.addAll(0, children);
+			}
 		}
 
 		return result;
@@ -148,7 +151,8 @@ public class GotIssuesRestController {
 			throws ParseException {
 		final Issue i = new Issue(title, description, new Date(),
 				contributors.findOne(getMe().getUsername()),
-				parent != null ? getIssue(parent) : null);
+				(parent != null && parent != PARENT_NONE) ? getIssue(parent)
+						: null);
 
 		if (deadline != null && deadline != "")
 			i.setDeadline(DATE_FORMAT.parse(deadline));
@@ -175,6 +179,7 @@ public class GotIssuesRestController {
 	public Issue alterIssue(
 			@PathVariable("i") Long id,
 			@RequestParam(value = "title", required = false) String title,
+			@RequestParam(value = "parent", required = false) Long parent,
 			@RequestParam(value = "description", required = false) String description,
 			@RequestParam(value = "deadline", required = false) String deadline,
 			@RequestParam(value = "assignees[]", required = false) List<String> assignees) {
@@ -191,6 +196,33 @@ public class GotIssuesRestController {
 			content.append("<li><strong>New title: </strong>" + title + "</li>");
 			i.setTitle(title);
 		}
+		if (parent != null) {
+			if (parent == PARENT_NONE) {
+				if (i.getParent() != null) {
+					content.append("<li><strong>Removed from parent </strong>"
+							+ i.getParent() + ".</li>");
+					i.setParent(null);
+				}
+			} else {
+				Issue newParent = getIssue(parent);
+
+				Assert.isTrue(!newParent.equals(i),
+						"An issue cannot be parent of itself.");
+
+				if (i.getParent() != null && !i.getParent().equals(newParent)) {
+					content.append("<li><strong>Removed from parent </strong>"
+							+ i.getParent() + ".</li>");
+					i.setParent(null);
+				}
+
+				if (i.getParent() == null) {
+					content.append("<li><strong>Attached to parent </strong>"
+							+ newParent + ".</li>");
+					i.setParent(newParent);
+				}
+			}
+
+		}
 		if (description != null && !description.equals(i.getDescription())) {
 			content.append("<li><strong>New description: </strong>"
 					+ description + "</li>");
@@ -201,7 +233,6 @@ public class GotIssuesRestController {
 			try {
 				dlObj = DATE_FORMAT.parse(deadline);
 			} catch (ParseException e) {
-				e.printStackTrace();
 			}
 
 			if (i.getDeadline() == null) {
@@ -214,7 +245,8 @@ public class GotIssuesRestController {
 				if (dlObj == null) {
 					content.append("<li><strong>Removed deadline </strong>"
 							+ deadline + "</li>");
-				} else if(!i.getDeadline().equals(dlObj)){
+				} else if (i.getDeadline().getTime() % DL_PREC == dlObj
+						.getTime() % DL_PREC) {
 					content.append("<li><strong>Shifted deadline from </strong>"
 							+ DATE_FORMAT.format(i.getDeadline())
 							+ " to "
@@ -365,8 +397,9 @@ public class GotIssuesRestController {
 	public Contribution contribute(
 			@RequestParam(value = "content", defaultValue = "") String content,
 			@RequestParam("issue") Long issue) {
-		return contribute(getMe().getName() + " contributed to issue #" + issue,
-				content, issue, getMe().getName(), true, 3);
+		return contribute(
+				getMe().getName() + " contributed to issue #" + issue, content,
+				issue, getMe().getName(), true, 3);
 	}
 
 	@RequestMapping(value = "/contributions/{id}:delete", method = {
@@ -554,16 +587,15 @@ public class GotIssuesRestController {
 			RequestMethod.GET, RequestMethod.POST })
 	@CacheEvict("default")
 	public Contributor alterContributor(
-			@PathVariable("c") String c,
-			@RequestParam(value = "name", required = false) String name,
+			@PathVariable("c") String name,
 			@RequestParam(value = "fullname", required = false) String fullname,
 			@RequestParam(value = "password", required = false) String password,
 			@RequestParam(value = "mail", required = false) String mail) {
 
-		Assert.isTrue(getMe().isAdmin() && getMe().getName().equals(name),
+		Assert.isTrue(getMe().isAdmin() || getMe().getName().equals(name),
 				"Only admin or the contributor himself can do this!");
 
-		Contributor co = contributors.findOne(c);
+		Contributor co = contributors.findOne(name);
 
 		if (name != null)
 			co.setName(name);

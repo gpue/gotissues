@@ -10,13 +10,20 @@
 	<div class="container col-md-7 col-md-offset-2">
 		<form class="form-horizontal" role="form" action="issuelist"
 			method="post" data-parsley-validate="true" id="issueform">
-			<div th:if="${parent} != null" class="form-group">
-				<label for="parent" class="col-sm-2 control-label">Parent</label> <input
-					type="hidden" id="parent" name="parent" th:value="${parent.id}" />
+			<div class="form-group">
+				<label for="parent" class="col-sm-2 control-label">Parent</label>
 				<div class="col-sm-10">
-					<input type="text" class="form-control"
-						th:attrappend="value=${'#' + parent.id + ' ' + parent.title}"
-						disabled="disabled" />
+					<select id="parent" name="parent" class="form-control">
+						<option th:if="${parent} != null" th:text="${parent}"
+							th:value="${issue.parent.id}" selected="selected">PARENT</option>
+						<option th:if="${parent} != null" value="-1">No
+							parent</option>
+						<option th:if="${parent} == null" selected="selected"
+							value="-1">No parent</option>
+						<option th:each="pissue : ${issues}"
+							th:unless="${parent}!=null and ${pissue.parent.equals(parent)}"
+							th:text="${pissue}" th:value="${pissue.id}">PARENT</option>
+					</select>
 				</div>
 			</div>
 			<div class="form-group">
@@ -50,23 +57,26 @@
 			<div class="form-group">
 				<label for="description" class="col-sm-2 control-label">Description</label>
 				<div class="col-sm-10">
-					<div id="sndesc"></div>
+					<div id="sndesc" class="summernote"></div>
 
 				</div>
 			</div>
 			<div class="form-group">
 				<div class="col-sm-offset-2 col-sm-10">
-					<button type="button" onclick="javascript:addIssue()" class="btn btn-primary fa fa-save">&nbsp;Create</button>
+					<button type="button" onclick="javascript:addIssue()"
+						class="btn btn-primary fa fa-save submit">&nbsp;Create</button>
 				</div>
 			</div>
 		</form>
 	</div>
 	<script type="text/javascript" th:inline="javascript">
+		var asgSelect = null;
+
 		$(document).ready(function() {
 			$('#sndesc').summernote({
 				height : 150
 			});
-			$('#select-beast').selectize({
+			asgSelect = $('#select-beast').selectize({
 				create : true,
 				sortField : 'text'
 			});
@@ -76,7 +86,7 @@
 				todayHighlight : true,
 				todayBtn : true,
 				autoclose : true,
-				dateFormat: 'dd.mm.yyyy'
+				dateFormat : 'dd.mm.yyyy'
 			});
 		});
 
@@ -86,15 +96,20 @@
 				var formData = {
 					title : document.getElementById("title").value,
 					description : $('#sndesc').code(),
-					deadline : document.getElementById("deadline").value,
-					assignees : $("#select-beast").val()
+					assignees : $("#select-beast").val(),
+					parent : document.getElementById("parent").value
 				};
-
-				if (document.getElementById("parent") != null)
-					formData.parent = document.getElementById("parent").value;
+				
 				if (document.getElementById("deadline").length != 0)
 					formData.deadline = document.getElementById("deadline").value;
 
+				//avoid double creation
+				$(':input').attr("disabled", true);
+				$('.submit').attr("style", "display:none");
+				$('.summernote').destroy();
+				asgSelect.disable();
+
+				//submit
 				$.ajax({
 					type : "GET",
 					url : "/api/issues:add",
@@ -102,8 +117,9 @@
 					success : function(data) {
 						window.location.href = '/issue/' + data.id;
 					},
-					error : function(){
-						shout("danger","Error!","Issue was not created due to an error.");
+					error : function() {
+						shout("danger", "Error!",
+								"Issue was not created due to an error.");
 					},
 					dataType : "json",
 					contentType : "application/json"
