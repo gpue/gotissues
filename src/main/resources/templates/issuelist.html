@@ -66,12 +66,16 @@
 
 		function tree() {
 			$(".indenter").remove();
-			$("#tt")
-					.treetable(
+			var expanded = $('.expanded');
+			var tt = $("#tt");
+			tt.treetable(
 							{
 								expandable : true,
 								expanderTemplate : '<a class="fa fa-plus-square" href="#">&nbsp;&nbsp;</a>'
 							},true);
+			expanded.each(function(){
+				tt.treetable("expandNode",$(this).data("ttId"));
+			});
 		}
 
 		function issuerow(idata) {
