@@ -3,6 +3,7 @@ package de.gpue.gotissues.controllers;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -39,11 +40,14 @@ import de.gpue.gotissues.util.MailUtil;
 @RequestMapping(value = "/api")
 public class GotIssuesRestController {
 	private static final int PARENT_NONE = -1;
-	private static final String WATCHED = "watched@";
+	private static final String WATCHED = "@watched:";
+	private static final String ASSIGNED = "@assigned:";
+	private static final String OPEN = "@open";
+	private static final String CLOSED = "@closed";
+
 	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat(
 			"dd.MM.yyyy");
 	public static final int PAGE_SIZE = 20;
-	private static final String ASSIGNED = "assigned@";
 	private static final String NO_PWD = "********";
 	private static final long DL_PREC = 1000 * 60 * 60 * 24;
 
@@ -76,29 +80,72 @@ public class GotIssuesRestController {
 		Set<Issue> found = new HashSet<Issue>();
 
 		String searchArr[] = search.split("\\s");
+		List<String> filters = new LinkedList<String>();
 
+		// build base set
 		for (String s : searchArr) {
-			found.addAll(issues.findByTitleContainingOrDescriptionContaining(
-					search, search));
-			contributions.findByContentContaining(s).forEach(
-					c -> found.add(c.getIssue()));
+			s = s.trim();
+			if (s.length() == 0)
+				continue;
+			
+			if(s.length()>1 && s.startsWith("#")){
+				String ids = s.substring(1);
+				Long id = Long.parseLong(ids);
+				Issue i = issues.findOne(id);
+				if(i != null){
+					return orderChildren(Arrays.asList(i));
+				}
+			}
 
-			if (s.startsWith(WATCHED)) {
-				String cn = s.substring(WATCHED.length());
-				Contributor c = cn.length() == 0 ? getMe() : contributors
-						.findOne(cn);
-				if (c != null)
-					found.addAll(issues.findByWatchers(c));
-			} else if (s.startsWith(ASSIGNED)) {
-				String cn = s.substring(ASSIGNED.length());
-				Contributor c = cn.length() == 0 ? getMe() : contributors
-						.findOne(cn);
-				if (c != null)
-					found.addAll(issues.findByAssignees(c));
-			} else {
-				Contributor c = contributors.findOne(s);
-				contributions.findByContributorOrderByCreatedDesc(c).forEach(
-						ct -> found.add(ct.getIssue()));
+			found.addAll(issues.findByTitleContainingOrDescriptionContaining(s,
+					s));
+
+			found.addAll(contributions.findByContentContaining(s).stream()
+					.map(c -> c.getIssue()).collect(Collectors.toList()));
+
+			Contributor c = contributors.findOne(s);
+			if (c != null) {
+
+				found.addAll(contributions
+						.findByContributorOrderByCreatedDesc(c).stream()
+						.map(cc -> cc.getIssue()).collect(Collectors.toList()));
+
+				found.addAll(issues.findByAssignees(c));
+			}
+
+			if (s.startsWith(WATCHED) || s.startsWith(ASSIGNED)
+					|| s.equals(OPEN) || s.equals(CLOSED))
+				filters.add(s);
+		}
+
+		if (found.isEmpty())
+			found.addAll(issues.findByTitleContainingOrDescriptionContaining(
+					"", ""));
+
+		// filter
+		for (String f : filters) {
+			if (f.startsWith(WATCHED)) {
+				String cn = f.substring(WATCHED.length());
+				Contributor c = contributors.findOne(cn);
+				if (c != null) {
+					found = found.stream()
+							.filter(i -> i.getWatchers().contains(c))
+							.collect(Collectors.toSet());
+				}
+			} else if (f.startsWith(ASSIGNED)) {
+				String cn = f.substring(ASSIGNED.length());
+				Contributor c = contributors.findOne(cn);
+				if (c != null) {
+					found = found.stream()
+							.filter(i -> i.getAssignees().contains(c))
+							.collect(Collectors.toSet());
+				}
+			} else if (f.equals(OPEN)) {
+				found = found.stream().filter(i -> i.isOpen())
+						.collect(Collectors.toSet());
+			} else if (f.equals(CLOSED)) {
+				found = found.stream().filter(i -> !i.isOpen())
+						.collect(Collectors.toSet());
 			}
 		}
 
@@ -116,19 +163,17 @@ public class GotIssuesRestController {
 	}
 
 	private List<Issue> orderChildren(List<Issue> todo) {
+		todo = new LinkedList<Issue>(todo);
 		List<Issue> result = new LinkedList<Issue>();
-		Set<Issue> done = new HashSet<Issue>();
 
 		while (!todo.isEmpty()) {
 			Issue head = todo.remove(0);
-			if (done.add(head)) {
-				result.add(head);
-				List<Issue> children = issues
-						.findByParentOrderByLastChangedDesc(head);
-				todo.removeAll(children);
-				result.removeAll(children);
-				todo.addAll(0, children);
-			}
+			result.add(head);
+			List<Issue> children = issues
+					.findByParentOrderByLastChangedDesc(head);
+			todo.removeAll(children);
+			result.removeAll(children);
+			todo.addAll(0, children);
 		}
 
 		return result;
@@ -153,7 +198,7 @@ public class GotIssuesRestController {
 				contributors.findOne(getMe().getUsername()),
 				(parent != null && parent != PARENT_NONE) ? getIssue(parent)
 						: null);
-
+		
 		if (deadline != null && deadline != "")
 			i.setDeadline(DATE_FORMAT.parse(deadline));
 		if (assignees != null) {
@@ -221,7 +266,8 @@ public class GotIssuesRestController {
 					i.setParent(newParent);
 				}
 			}
-
+			List<Issue> descendants = orderChildren(Arrays.asList(i));
+			Assert.isTrue(!descendants.contains(i.getParent()),"A descendant cannot be a parent!");
 		}
 		if (description != null && !description.equals(i.getDescription())) {
 			content.append("<li><strong>New description: </strong>"

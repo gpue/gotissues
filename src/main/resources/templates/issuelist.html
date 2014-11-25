@@ -28,6 +28,7 @@
 	</div>
 	<script type="text/javascript" th:inline="javascript">
 		var searchNeedle = /*[[${search}]]*/"";
+		var expand = /*[[${expand}]]*/null;
 		var pageNum = 1;
 		$(document).ready(function() {
 			addIssues();
@@ -56,8 +57,8 @@
 					});
 					tree();
 				},
-				error : function(){
-					shout("danger","Error!","Issues could be be retrieved.");
+				error : function() {
+					shout("danger", "Error!", "Issues could be be retrieved.");
 				},
 				dataType : "json",
 				contentType : "application/json"
@@ -65,17 +66,26 @@
 		}
 
 		function tree() {
+			var tempScrollTop = $(window).scrollTop();
 			$(".indenter").remove();
 			var expanded = $('.expanded');
 			var tt = $("#tt");
-			tt.treetable(
+			tt
+					.treetable(
 							{
 								expandable : true,
 								expanderTemplate : '<a class="fa fa-plus-square" href="#">&nbsp;&nbsp;</a>'
-							},true);
-			expanded.each(function(){
-				tt.treetable("expandNode",$(this).data("ttId"));
+							}, true);
+			expanded.each(function() {
+				tt.treetable("expandNode", $(this).data("ttId"));
 			});
+			
+			if(expand != null){
+				$('#tt').treetable("expandNode", expand);
+				expand = null;
+			}
+			
+			$(window).scrollTop(tempScrollTop);
 		}
 
 		function issuerow(idata) {

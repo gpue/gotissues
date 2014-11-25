@@ -58,6 +58,10 @@
 <script type="text/javascript" src="/js/gotissues.js"></script>
 
 <title>Got Issues?</title>
+<script type="text/javascript" th:inline="javascript">
+	var me = /*[[${me.name}]]*/"";
+	var admin = /*[[${me.isAdmin()}]]*/false;
+</script>
 </head>
 <body>
 	<div class="jumbotron" th:fragment="jumbotron">
@@ -67,8 +71,7 @@
 		</h1>
 	</div>
 	<div class="container" style="padding: 40px" th:fragment="shout">
-		<div class="row" id="shout">
-		</div>
+		<div class="row" id="shout"></div>
 	</div>
 	<nav class="navbar navbar-inverse" role="navigation" th:fragment="nav">
 		<div class="container-fluid">
@@ -87,10 +90,10 @@
 						<ul class="dropdown-menu" role="menu"
 							aria-labelledby="dropdownIssues">
 							<li role="presentation"><a role="menuitem" tabindex="-1"
-								href="/issuelist?search=watched@"><i class="fa fa-eye"></i>&nbsp;
+								th:href="@{/issuelist?search=@watched:{who}(who=${me})}"><i class="fa fa-eye"></i>&nbsp;
 									Watched issues <span class="badge" th:text="${watchcount}"></span></a></li>
 							<li role="presentation"><a role="menuitem" tabindex="-1"
-								href="/issuelist?search=assigned@"><i class="fa fa-pencil"></i>&nbsp;
+								th:href="@{/issuelist?search=@assigned:{who}(who=${me})}"><i class="fa fa-pencil"></i>&nbsp;
 									Assigned issues <span class="badge" th:text="${assigncount}"></span></a></li>
 						</ul>
 					</li>
@@ -102,10 +105,33 @@
 					<li>
 						<form class="navbar-form navbar-left" role="search" method="get"
 							action="/issuelist">
-							<div class="form-group">
+							<div class="input-group">
 								<input th:attr="value=${search==null ? '' : search}" type="text"
 									class="form-control" id="search" name="search"
 									placeholder="Search" />
+								<div class="input-group-btn">
+									<button type="submit" class="btn btn-default">
+										<span class="fa fa-search"></span>
+									</button>
+									<button type="button" class="btn btn-default dropdown-toggle"
+										data-toggle="dropdown" aria-expanded="false">
+										Add filter <span class="caret"></span>
+									</button>
+									<ul class="dropdown-menu dropdown-menu-right" role="menu">
+										<li><a
+											href="javascript:$('#search').val($('#search').val()+' @assigned:'+me)">My
+												assignments</a></li>
+										<li><a
+											href="javascript:$('#search').val($('#search').val()+' @watched:'+me)">Watched
+												by me</a></li>
+										<li><a
+											href="javascript:$('#search').val($('#search').val()+' @open')">Open</a></li>
+										<li><a
+											href="javascript:$('#search').val($('#search').val()+' @closed')">Closed</a></li>
+										<li class="divider"></li>
+										<li><a href="javascript:$('#search').val('')">Clear</a></li>
+									</ul>
+								</div>
 							</div>
 						</form>
 					</li>

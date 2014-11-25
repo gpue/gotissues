@@ -40,6 +40,18 @@
 					</div>
 				</div>
 
+				<div class="form-group">
+					<label class="col-sm-2 control-label"> </label>
+					<div class="col-sm-10">
+						<a th:if="${issue.parent} != null"
+							class="btn btn-primary fa fa-sitemap"
+							th:href="@{/issuelist(expand=${issue.parent.id},search='#'+${issue.parent.id})}">
+							Show hierarchy</a> <a th:if="${issue.parent} == null"
+							class="btn btn-primary fa fa-sitemap"
+							th:href="@{/issuelist(expand=${issue.id},search='#'+${issue.id})}">
+							Show hierarchy</a>
+					</div>
+				</div>
 
 				<div class="form-group">
 					<label for="parent" class="col-sm-2 control-label">Parent</label>
@@ -49,8 +61,8 @@
 								th:value="${issue.parent.id}" selected="selected">PARENT</option>
 							<option th:if="${issue.parent} != null" value="-1">No
 								parent</option>
-							<option th:if="${issue.parent} == null" selected="selected" value="-1">No
-								parent</option>
+							<option th:if="${issue.parent} == null" selected="selected"
+								value="-1">No parent</option>
 							<option th:each="pissue : ${issues}"
 								th:unless="${issue.parent}!=null and (${pissue.equals(issue)} or ${pissue.equals(issue.parent)})"
 								th:text="${pissue}" th:value="${pissue.id}">PARENT</option>
@@ -60,8 +72,8 @@
 				<div class="form-group">
 					<label for="title" class="col-sm-2 control-label">Title</label>
 					<div class="col-sm-10">
-						<input type="text" class="form-control" id="title" name="title"
-							required="required" th:value="${issue.title}"
+						<input type="text" class="form-control deactivatable" id="title"
+							name="title" required="required" th:value="${issue.title}"
 							data-parsley-length="[3,64]" />
 					</div>
 				</div>
@@ -82,7 +94,7 @@
 				<div class="form-group">
 					<label for="deadline" class="col-sm-2 control-label">Deadline</label>
 					<div class="col-sm-10">
-						<input class="datepicker form-control"
+						<input class="datepicker form-control deactivatable"
 							data-date-format="dd.mm.yyyy" id="deadline" name="deadline"
 							th:value="${issue.deadline} != null ? ${#calendars.format(issue.deadline,'dd.MM.yyyy')}"></input>
 					</div>
@@ -132,9 +144,8 @@
 	</div>
 	<script type="text/javascript" th:inline="javascript">
 		var issue = /*[[${issue.id}]]*/-1;
-		var me = /*[[${me.name}]]*/"";
-		var admin = /*[[${me.isAdmin()}]]*/false;
 		var asgSelect = null;
+		var parentSelect = null;
 		var pageNum = 1;
 
 		$(document).ready(
@@ -147,7 +158,6 @@
 						create : true,
 						sortField : 'text'
 					})[0].selectize;
-
 					$('.datepicker').datepicker({
 						startDate : '-0d',
 						weekStart : 1,
@@ -214,7 +224,7 @@
 				document.getElementById("open").style.display = "none";
 				document.getElementById("close").style.display = "block";
 
-				$(':input').attr("disabled", false);
+				$('.deactivatable').attr("disabled", false);
 
 				$('.submit').attr("style", "display:block");
 
@@ -230,7 +240,7 @@
 				document.getElementById("open").style.display = "block";
 				document.getElementById("close").style.display = "none";
 
-				$(':input').attr("disabled", true);
+				$('.deactivatable').attr("disabled", true);
 				$('#contribform').attr("style", "display:none");
 
 				$('.submit').attr("style", "display:none");
@@ -317,7 +327,7 @@
 					title : document.getElementById("title").value,
 					description : $('#sndesc').code(),
 					assignees : $("#select-beast").val(),
-					parent: document.getElementById("parent").value
+					parent : document.getElementById("parent").value
 				};
 
 				if (document.getElementById("deadline").length != 0)

@@ -65,8 +65,10 @@ public class GotIssuesController implements ErrorController {
 	@RequestMapping("/issuelist")
 	public String issueList(
 			@RequestParam(value = "search", defaultValue="") String search,
+			@RequestParam(value = "expand", required=false) Long expand,
 			Model model) {
 		model.addAttribute("search", search);
+		if(expand != null)model.addAttribute("expand",expand);
 		return skeleton("/issuelist", model);
 	}
 

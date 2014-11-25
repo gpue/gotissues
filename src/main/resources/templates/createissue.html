@@ -29,7 +29,7 @@
 			<div class="form-group">
 				<label for="title" class="col-sm-2 control-label">Title</label>
 				<div class="col-sm-10">
-					<input type="text" class="form-control" id="title" name="title"
+					<input type="text" class="form-control deactivatable" id="title" name="title"
 						placeholder="My New Issue" required="required"
 						data-parsley-length="[3,64]" />
 				</div>
@@ -50,7 +50,7 @@
 			<div class="form-group">
 				<label for="deadline" class="col-sm-2 control-label">Deadline</label>
 				<div class="col-sm-10">
-					<input class="datepicker form-control"
+					<input class="datepicker form-control deactivatable"
 						data-date-format="dd.mm.yyyy" id="deadline" name="deadline"></input>
 				</div>
 			</div>
@@ -58,7 +58,6 @@
 				<label for="description" class="col-sm-2 control-label">Description</label>
 				<div class="col-sm-10">
 					<div id="sndesc" class="summernote"></div>
-
 				</div>
 			</div>
 			<div class="form-group">
@@ -71,7 +70,8 @@
 	</div>
 	<script type="text/javascript" th:inline="javascript">
 		var asgSelect = null;
-
+		var parentSelect = null;
+		
 		$(document).ready(function() {
 			$('#sndesc').summernote({
 				height : 150
@@ -79,7 +79,13 @@
 			asgSelect = $('#select-beast').selectize({
 				create : true,
 				sortField : 'text'
-			});
+			})[0].selectize;
+			
+			parentSelect = $('#parent').selectize({
+				create : true,
+				sortField : 'text'
+			})[0].selectize;
+			
 			$('.datepicker').datepicker({
 				startDate : '-0d',
 				weekStart : 1,
@@ -104,10 +110,11 @@
 					formData.deadline = document.getElementById("deadline").value;
 
 				//avoid double creation
-				$(':input').attr("disabled", true);
+				$('.deactivatable').attr("disabled", true);
 				$('.submit').attr("style", "display:none");
 				$('.summernote').destroy();
 				asgSelect.disable();
+				parentSelect.disable();
 
 				//submit
 				$.ajax({
