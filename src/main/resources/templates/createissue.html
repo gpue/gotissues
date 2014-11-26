@@ -15,13 +15,13 @@
 				<div class="col-sm-10">
 					<select id="parent" name="parent" class="form-control">
 						<option th:if="${parent} != null" th:text="${parent}"
-							th:value="${issue.parent.id}" selected="selected">PARENT</option>
+							th:value="${parent.id}" selected="selected">PARENT</option>
 						<option th:if="${parent} != null" value="-1">No
 							parent</option>
 						<option th:if="${parent} == null" selected="selected"
 							value="-1">No parent</option>
 						<option th:each="pissue : ${issues}"
-							th:unless="${parent}!=null and ${pissue.parent.equals(parent)}"
+							th:unless="${parent}!=null and ${pissue.equals(parent)}"
 							th:text="${pissue}" th:value="${pissue.id}">PARENT</option>
 					</select>
 				</div>
