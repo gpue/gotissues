@@ -7,6 +7,7 @@ import java.util.Set;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Lob;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.validation.constraints.NotNull;
@@ -38,6 +39,7 @@ public class Issue {
 	@ManyToMany
 	private Set<Contributor> watchers;
 	
+	@Lob
 	private String processCode;
 	private String processState;
 

@@ -34,6 +34,12 @@ function confirmAction(msg) {
 }
 
 function enterAction(msg) {
+	return enterAction(msg, function(v) {
+		return v;
+	});
+}
+
+function enterAction(msg, interpreter) {
 	return function(transition) {
 		return function() {
 			var ig = null;
@@ -41,15 +47,21 @@ function enterAction(msg) {
 					p(ig = inputGroupButton(msg, '')));
 
 			var action = function() {
-				transition.finalize();
-				updateState();
-				contribute("User entered required information ("+msg+"): " + ig.childNodes[0].value);
+				var value = interpreter(ig.childNodes[0].value);
+
+				if (value != null) {
+					transition.finalize();
+					Proclib.netstate.data[transition.name] = value;
+					updateState();
+					contribute("User entered required information (" + msg
+							+ "): " + value);
+				}
 			};
 
 			var idx = actionRegistry.push(action) - 1;
 
-			ig.childNodes[1].childNodes[0].setAttribute('onClick', 'javascript:actionRegistry[' + idx
-					+ ']()');
+			ig.childNodes[1].childNodes[0].setAttribute('onClick',
+					'javascript:actionRegistry[' + idx + ']()');
 		}
 	}
 }

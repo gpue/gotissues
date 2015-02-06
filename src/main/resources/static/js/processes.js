@@ -7,6 +7,7 @@ Proclib = {
 	prepare : function() {
 		if(!Proclib.netstate.init){
 			Proclib.netstate.marking = Proclib.initmarking;
+			Proclib.netstate.data = [];
 			Proclib.netstate.init = true;
 		}
 		
@@ -25,7 +26,11 @@ Proclib = {
 			});
 			if (activated) {
 				t.activated = true;
-				t.prepare();
+				try{
+					t.prepare();
+				} catch(e) {
+					shout("error", "Error!", "Failure occuring when executing transtion "+t.name+".");
+				}
 			}
 		});
 

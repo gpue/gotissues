@@ -3,6 +3,7 @@ package de.gpue.gotissues.bo.process;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Lob;
 
 @Entity
 public class ProcessDescription {
@@ -10,6 +11,8 @@ public class ProcessDescription {
 	@GeneratedValue
 	private Long id;
 	private String name;
+	
+	@Lob
 	private String code;
 
 	public Long getId() {

@@ -1,52 +1,68 @@
 function showProcessGraph(container) {
 	var nodes = [];
 	var nodesRaw = [];
-	for(var i = 0; i < Proclib.places.length; i++){
+	for (var i = 0; i < Proclib.places.length; i++) {
 		nodes.push({
-			id: i,
-			label: ''+Proclib.netstate.marking[i],
-			group: 'places'
+			id : i,
+			label : '' + Proclib.netstate.marking[i],
+			group : 'places'
 		});
 		nodesRaw.push(Proclib.places[i]);
 	}
 	var j = nodesRaw.length;
-	for(var i = 0; i< Proclib.transitions.length; i++){
+	for (var i = 0; i < Proclib.transitions.length; i++) {
 		j = nodes.push({
-			id: j,
-			label: Proclib.transitions[i].name,
-			group: 'transitions'
+			id : j,
+			label : Proclib.transitions[i].name,
+			group : 'transitions'
 		});
 		nodesRaw.push(Proclib.transitions[i]);
 	}
 
 	// create an array with edges
 	var edges = [];
-	Proclib.arcs.forEach(function(a){
+	Proclib.arcs.forEach(function(a) {
 		edges.push({
-			from: nodesRaw.indexOf(a.from),
-			to: nodesRaw.indexOf(a.to)
+			from : nodesRaw.indexOf(a.from),
+			to : nodesRaw.indexOf(a.to)
 		});
-	});							
-	
+	});
+
 	// create a network
 	var data = {
 		nodes : nodes,
 		edges : edges
-	};							
+	};
 	var options = {
 		edges : {
-			style: 'arrow'
+			style : 'arrow'
 		},
-		groups: {
-			transitions :{
-				shape: 'box'
+		groups : {
+			transitions : {
+				shape : 'box',
+				color : {
+					border : 'black',
+					background : 'lightblue',
+					highlight : {
+						border : 'orange',
+						background : 'green'
+					}
+				}
 			},
 			places : {
-				shape: 'circle'
-			}							
+				shape : 'circle',
+				color : {
+					border : 'black',
+					background : 'white',
+					highlight : {
+						border : 'black',
+						background : 'orange'
+					}
+				}
+			}
 		}
 	};
-	
+
 	new vis.Network(container, data, options);
 }
 
@@ -130,23 +146,23 @@ function button(text, onclick) {
 	return btn;
 }
 
-function inputGroupButton(placeholder, onclick){
+function inputGroupButton(placeholder, onclick) {
 	var ig = document.createElement('DIV');
-	ig.setAttribute("class","input-group");
+	ig.setAttribute("class", "input-group");
 	var i = document.createElement('INPUT');
-	i.setAttribute("type","text");
-	i.setAttribute("class","form-control");
-	i.setAttribute("placeholder",placeholder);
+	i.setAttribute("type", "text");
+	i.setAttribute("class", "form-control");
+	i.setAttribute("placeholder", placeholder);
 	ig.appendChild(i);
 	var s = document.createElement('SPAN');
-	s.setAttribute("class","input-group-btn");
+	s.setAttribute("class", "input-group-btn");
 	ig.appendChild(s);
-	var b = button('Ok',onclick);
+	var b = button('Ok', onclick);
 	s.appendChild(b);
 	return ig;
 }
 
-function p(content){
+function p(content) {
 	var p = document.createElement('P');
 	p.appendChild(content);
 	return p;
@@ -224,11 +240,11 @@ function timelineEntry(cdata) {
 	return li;
 }
 
-function editprocesslink(name,id){
+function editprocesslink(name, id) {
 	var a = document.createElement('A');
 	a.href = '/processes/' + id;
 	a.setAttribute("class", "fa fa-cogs");
-	a.appendChild(txt(' '+name));
+	a.appendChild(txt(' ' + name));
 	return a;
 }
 
@@ -251,7 +267,7 @@ function deleteProcess(id) {
 	}
 }
 
-function deleteprocesslink(id){
+function deleteprocesslink(id) {
 	var a = document.createElement('A');
 	a.href = 'javascript:deleteProcess(' + id + ')';
 	a.appendChild(txt(' Delete'));
@@ -260,7 +276,7 @@ function deleteprocesslink(id){
 	return a;
 }
 
-function instantiateprocesslink(id){
+function instantiateprocesslink(id) {
 	var a = document.createElement('A');
 	a.href = '/processes/' + id + ':instantiate';
 	a.appendChild(txt(' Instantiate'));
@@ -268,4 +284,3 @@ function instantiateprocesslink(id){
 
 	return a;
 }
-
