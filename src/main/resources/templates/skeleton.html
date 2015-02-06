@@ -55,7 +55,14 @@
 <link href="/css/datepicker3.css" rel="stylesheet"></link>
 <script type="text/javascript" src="/js/bootstrap-datepicker.js"></script>
 
+<!-- vis -->
+<link href="/css/vis.css" rel="stylesheet"></link>
+<script type="text/javascript" src="/js/vis.js"></script>
+
+<!-- own scripts -->
+<script type="text/javascript" src="/js/processes.js"></script>
 <script type="text/javascript" src="/js/gotissues.js"></script>
+<script type="text/javascript" src="/js/proclib.js"></script>
 
 <title>Got Issues?</title>
 <script type="text/javascript" th:inline="javascript">
@@ -70,7 +77,7 @@
 				th:text="${me.name}">USER</a>?
 		</h1>
 	</div>
-	<div class="container" style="padding: 40px" th:fragment="shout">
+	<div class="container" th:fragment="shout">
 		<div class="row" id="shout"></div>
 	</div>
 	<nav class="navbar navbar-inverse" role="navigation" th:fragment="nav">
@@ -100,6 +107,8 @@
 
 					<li><a href="/createissue"><i class="fa fa-plus bg-black"></i>&nbsp;
 							Create issue</a></li>
+					<li><a href="/processlist"><i class="fa fa-cogs bg-black"></i>&nbsp;
+							Processes</a></li>
 					<li><a href="/userstats"><i class="fa fa-tasks bg-black"></i>&nbsp;
 							Users and statistics</a></li>
 					<li>

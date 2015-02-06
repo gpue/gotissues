@@ -31,9 +31,11 @@ import org.springframework.web.bind.annotation.RestController;
 import de.gpue.gotissues.bo.Contribution;
 import de.gpue.gotissues.bo.Contributor;
 import de.gpue.gotissues.bo.Issue;
+import de.gpue.gotissues.bo.process.ProcessDescription;
 import de.gpue.gotissues.repo.ContributionRepository;
 import de.gpue.gotissues.repo.ContributorRepository;
 import de.gpue.gotissues.repo.IssueRepository;
+import de.gpue.gotissues.repo.ProcessDescriptionRepository;
 import de.gpue.gotissues.util.MailUtil;
 
 @RestController
@@ -57,6 +59,8 @@ public class GotIssuesRestController {
 	private ContributorRepository contributors;
 	@Autowired
 	private ContributionRepository contributions;
+	@Autowired
+	private ProcessDescriptionRepository processes;
 	@Autowired
 	private PasswordEncoder encoder;
 	@Value("${gotissues.notifier.mail}")
@@ -87,12 +91,12 @@ public class GotIssuesRestController {
 			s = s.trim();
 			if (s.length() == 0)
 				continue;
-			
-			if(s.length()>1 && s.startsWith("#")){
+
+			if (s.length() > 1 && s.startsWith("#")) {
 				String ids = s.substring(1);
 				Long id = Long.parseLong(ids);
 				Issue i = issues.findOne(id);
-				if(i != null){
+				if (i != null) {
 					return orderChildren(Arrays.asList(i));
 				}
 			}
@@ -198,7 +202,7 @@ public class GotIssuesRestController {
 				contributors.findOne(getMe().getUsername()),
 				(parent != null && parent != PARENT_NONE) ? getIssue(parent)
 						: null);
-		
+
 		if (deadline != null && deadline != "")
 			i.setDeadline(DATE_FORMAT.parse(deadline));
 		if (assignees != null) {
@@ -267,7 +271,8 @@ public class GotIssuesRestController {
 				}
 			}
 			List<Issue> descendants = orderChildren(Arrays.asList(i));
-			Assert.isTrue(!descendants.contains(i.getParent()),"A descendant cannot be a parent!");
+			Assert.isTrue(!descendants.contains(i.getParent()),
+					"A descendant cannot be a parent!");
 		}
 		if (description != null && !description.equals(i.getDescription())) {
 			content.append("<li><strong>New description: </strong>"
@@ -721,4 +726,81 @@ public class GotIssuesRestController {
 				.getPrincipal();
 		return getContributor(o.toString());
 	}
+
+	@RequestMapping("/processes")
+	public List<ProcessDescription> getProcessDescriptions() {
+		return processes.findAll();
+	}
+
+	@RequestMapping("/processes/{p}")
+	public ProcessDescription getProcess(@PathVariable("p") Long id) {
+		return processes.findOne(id);
+	}
+
+	@RequestMapping(value = "/processes:add", method = { RequestMethod.GET,
+			RequestMethod.POST })
+	@CacheEvict("default")
+	public ProcessDescription addProcess(@RequestParam("name") String name,
+			@RequestParam("code") String code) {
+		ProcessDescription pd = new ProcessDescription();
+		pd.setCode(code);
+		pd.setName(name);
+		return processes.save(pd);
+	}
+
+	@RequestMapping(value = "/processes/{p}:alter", method = {
+			RequestMethod.GET, RequestMethod.POST })
+	@CacheEvict("default")
+	public ProcessDescription alterProcess(@PathVariable("p") Long id,
+			@RequestParam("name") String name, @RequestParam("code") String code) {
+		ProcessDescription pd = processes.findOne(id);
+		pd.setCode(code);
+		pd.setName(name);
+		return processes.save(pd);
+	}
+	
+	@RequestMapping(value = "/processes/{p}:delete", method = {
+			RequestMethod.GET, RequestMethod.POST })
+	@CacheEvict("default")
+	public void deleteProcess(@PathVariable("p") Long id) {
+		processes.delete(id);
+	}
+
+	@RequestMapping(value = "/processes/{p}:instantiate", method = {
+			RequestMethod.GET, RequestMethod.POST })
+	@CacheEvict("default")
+	public Issue instantiateProcess(@PathVariable("p") Long id,
+			@RequestParam("parent") Long parent,
+			@RequestParam("title") String title) {
+		ProcessDescription pd = processes.findOne(id);
+		
+		Issue i = null;
+		try {
+			i = addIssue(title, "", parent,
+					Arrays.asList(new String[] { getMe().getName() }), null);
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+
+		i.setProcessCode(pd.getCode());
+		i.setProcessState("{init:false}");
+
+		i = issues.save(i);
+
+		return i;
+	}
+
+	@RequestMapping(value = "/issue/{i}:updateprocstate", method = {
+			RequestMethod.GET, RequestMethod.POST })
+	@CacheEvict("default")
+	public Issue updateProcessState(@PathVariable("i") Long id,
+			@RequestParam("state") String state) {
+		Issue i = issues.findOne(id);
+		i.setProcessState(state);
+		i = issues.save(i);
+		return i;
+	}
+	
+	
+
 }

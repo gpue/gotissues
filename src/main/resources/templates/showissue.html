@@ -10,138 +10,194 @@
 	<div class="container">
 		<div class="row col-md-10">
 
-			<form class="form-horizontal" role="form" action="issuelist"
-				method="post" data-parsley-validate="true" id="issueform">
-				<div class="form-group">
-					<label for="title" class="col-sm-2 control-label"></label>
-					<div class="col-sm-10">
-						<span class="h2 col-sm-3"> Issue #<span
-							th:text="${issue.id}">ID</span>
-						</span> <span class="col-sm-3" style="padding: 12px"> <span
-							style="display: none" id="close" class="h5">is open&nbsp;
-								<a class="btn btn-danger fa fa-close" href="javascript:close();">&nbsp;Close</a>
-						</span> <span class="h5" style="display: none" id="open">is
-								closed&nbsp; <a href="javascript:open();"
-								class="btn btn-success fa fa-check">&nbsp;Re-Open</a>
-						</span>
-						</span> <span class="col-sm-4" style="padding: 12px"> <span
-							style="display: none" id="watch" class="h5">not
-								watching&nbsp; <a class="btn btn-success fa fa-eye"
-								href="javascript:watch();">&nbsp;Watch</a>
-						</span> <span class="h5" style="display: none" id="unwatch">is
-								watched by you&nbsp; <a href="javascript:unwatch();"
-								class="btn btn-danger fa fa-check">&nbsp;Unwatch</a>
-						</span>
-						</span> <span th:if="${me.isAdmin()}" class="h5 col-sm-1"
-							style="padding: 12px"> <a
-							href="javascript:deleteIssue(issue);"
-							class="btn btn-danger fa fa-eraser">&nbsp;Delete</a>
-						</span>
-					</div>
-				</div>
+			<div role="tabpanel">
 
-				<div class="form-group">
-					<label class="col-sm-2 control-label"> </label>
-					<div class="col-sm-10">
-						<a th:if="${issue.parent} != null"
-							class="btn btn-primary fa fa-sitemap"
-							th:href="@{/issuelist(expand=${issue.parent.id},search='#'+${issue.parent.id})}">
-							Show hierarchy</a> <a th:if="${issue.parent} == null"
-							class="btn btn-primary fa fa-sitemap"
-							th:href="@{/issuelist(expand=${issue.id},search='#'+${issue.id})}">
-							Show hierarchy</a>
-					</div>
-				</div>
+				<!-- Nav tabs -->
+				<ul class="nav nav-tabs" role="tablist">
+					<li role="presentation" class="active"><a href="#metadata"
+						aria-controls="home" role="tab" data-toggle="tab">Metadata</a></li>
+					<li role="presentation"><a href="#process"
+						th:if="${issue.processCode} != null and ${issue.isOpen()}"
+						aria-controls="process" role="tab" data-toggle="tab">Current
+							process tasks</a></li>
+					<li role="presentation"><a href="#state"
+						th:if="${issue.processCode} != null and ${issue.isOpen()}"
+						aria-controls="state" role="tab" data-toggle="tab">Current
+							process state</a></li>
+					<li role="presentation"><a href="#contributions"
+						aria-controls="contributions" role="tab" data-toggle="tab">Contributions</a></li>
+				</ul>
 
-				<div class="form-group">
-					<label for="parent" class="col-sm-2 control-label">Parent</label>
-					<div class="col-sm-10">
-						<select id="parent" name="parent" class="form-control">
-							<option th:if="${issue.parent} != null" th:text="${issue.parent}"
-								th:value="${issue.parent.id}" selected="selected">PARENT</option>
-							<option th:if="${issue.parent} != null" value="-1">No
-								parent</option>
-							<option th:if="${issue.parent} == null" selected="selected"
-								value="-1">No parent</option>
-							<option th:each="pissue : ${issues}"
-								th:unless="${issue.parent}!=null and (${pissue.equals(issue)} or ${pissue.equals(issue.parent)})"
-								th:text="${pissue}" th:value="${pissue.id}">PARENT</option>
-						</select>
-					</div>
-				</div>
-				<div class="form-group">
-					<label for="title" class="col-sm-2 control-label">Title</label>
-					<div class="col-sm-10">
-						<input type="text" class="form-control deactivatable" id="title"
-							name="title" required="required" th:value="${issue.title}"
-							data-parsley-length="[3,64]" />
-					</div>
-				</div>
-				<div class="form-group">
-					<label for="assignees[]" class="col-sm-2 control-label">Assignees</label>
-					<div class="col-sm-10">
-						<select id="select-beast" name="assignees[]" multiple="multiple">
-							<option th:each="contributor : ${issue.assignees}"
-								th:text="${contributor.name}" th:value="${contributor.name}"
-								selected="selected">Add a contributor...</option>
-							<option th:each="contributor : ${contributors}"
-								th:unless="${issue.assignees.contains(contributor)}"
-								th:text="${contributor.name}" th:value="${contributor.name}">Add
-								a contributor...</option>
-						</select>
-					</div>
-				</div>
-				<div class="form-group">
-					<label for="deadline" class="col-sm-2 control-label">Deadline</label>
-					<div class="col-sm-10">
-						<input class="datepicker form-control deactivatable"
-							data-date-format="dd.mm.yyyy" id="deadline" name="deadline"
-							th:value="${issue.deadline} != null ? ${#calendars.format(issue.deadline,'dd.MM.yyyy')}"></input>
-					</div>
-				</div>
-				<div class="form-group">
-					<label for="description" class="col-sm-2 control-label">Description</label>
-					<div class="col-sm-10">
-						<input type="hidden" name="description" id="description" />
-						<div id="sndesc" class="summernote"
-							th:utext="${issue.description}"></div>
-					</div>
-				</div>
-				<div class="form-group">
-					<div class="col-sm-offset-2 col-sm-10">
-						<button type="button" onclick="javascript:updateIssue()"
-							class="btn btn-primary fa fa-save validate">&nbsp;Save</button>
-					</div>
-				</div>
-			</form>
-		</div>
-	</div>
-
-	<div class="row">&nbsp;</div>
-
-	<div class="container">
-		<div class="row">
-			<div class="col-md-9 col-md-offset-1 top-margin">
-				<div>
-					<ul class="timeline" id="timeline">
-						<li id="contribform"><i class="fa fa-edit bg-green"></i>
-							<div class="timeline-item">
-								<h3 class="timeline-header">New contribution</h3>
-								<div class="timeline-body">
-									<form class="form-horizontal" role="form" action="issuelist"
-										method="post" data-parsley-validate="true" id="issueform">
-										<div id="sncontrib" class="summernote"></div>
-										<br />
-										<button type="button" onclick="javascript:contribute()"
-											class="btn btn-primary fa fa-check validate submit">&nbsp;Contribute</button>
-									</form>
+				<!-- Tab panes -->
+				<div class="tab-content">
+					<div role="tabpanel" class="tab-pane active" id="metadata">
+						<form class="form-horizontal" role="form" action="issuelist"
+							method="post" data-parsley-validate="true" id="issueform">
+							<div class="form-group">
+								<label for="title" class="control-label"></label>
+								<div class="col-sm-10">
+									<span class="h2 col-sm-3"> Issue #<span
+										th:text="${issue.id}">ID</span>
+									</span> <span class="col-sm-3" style="padding: 12px"> <span
+										style="display: none" id="close" class="h5">is
+											open&nbsp; <a class="btn btn-danger fa fa-close"
+											href="javascript:close();">&nbsp;Close</a>
+									</span> <span class="h5" style="display: none" id="open">is
+											closed&nbsp; <a href="javascript:open();"
+											class="btn btn-success fa fa-check">&nbsp;Re-Open</a>
+									</span>
+									</span> <span class="col-sm-4" style="padding: 12px"> <span
+										style="display: none" id="watch" class="h5">not
+											watching&nbsp; <a class="btn btn-success fa fa-eye"
+											href="javascript:watch();">&nbsp;Watch</a>
+									</span> <span class="h5" style="display: none" id="unwatch">is
+											watched by you&nbsp; <a href="javascript:unwatch();"
+											class="btn btn-danger fa fa-check">&nbsp;Unwatch</a>
+									</span>
+									</span> <span th:if="${me.isAdmin()}" class="h5 col-sm-1"
+										style="padding: 12px"> <a
+										href="javascript:deleteIssue(issue);"
+										class="btn btn-danger fa fa-eraser">&nbsp;Delete</a>
+									</span>
 								</div>
-							</div></li>
-					</ul>
+							</div>
+
+							<div class="form-group">
+								<label class="col-sm-2 control-label"> </label>
+								<div class="col-sm-10">
+									<a th:if="${issue.parent} != null"
+										class="btn btn-primary fa fa-sitemap"
+										th:href="@{/issuelist(expand=${issue.parent.id},search='#'+${issue.parent.id})}">
+										Show hierarchy</a> <a th:if="${issue.parent} == null"
+										class="btn btn-primary fa fa-sitemap"
+										th:href="@{/issuelist(expand=${issue.id},search='#'+${issue.id})}">
+										Show hierarchy</a>
+								</div>
+							</div>
+
+							<div class="form-group">
+								<label for="parent" class="col-sm-2 control-label">Parent</label>
+								<div class="col-sm-10">
+									<select id="parent" name="parent" class="form-control">
+										<option th:if="${issue.parent} != null"
+											th:text="${issue.parent}" th:value="${issue.parent.id}"
+											selected="selected">PARENT</option>
+										<option th:if="${issue.parent} != null" value="-1">No
+											parent</option>
+										<option th:if="${issue.parent} == null" selected="selected"
+											value="-1">No parent</option>
+										<option th:each="pissue : ${issues}"
+											th:unless="${issue.parent}!=null and (${pissue.equals(issue)} or ${pissue.equals(issue.parent)})"
+											th:text="${pissue}" th:value="${pissue.id}">PARENT</option>
+									</select>
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="title" class="col-sm-2 control-label">Title</label>
+								<div class="col-sm-10">
+									<input type="text" class="form-control deactivatable"
+										id="title" name="title" required="required"
+										th:value="${issue.title}" data-parsley-length="[3,64]"></input>
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="assignees[]" class="col-sm-2 control-label">Assignees</label>
+								<div class="col-sm-10">
+									<select id="select-beast" name="assignees[]"
+										multiple="multiple">
+										<option th:each="contributor : ${issue.assignees}"
+											th:text="${contributor.name}" th:value="${contributor.name}"
+											selected="selected">Add a contributor...</option>
+										<option th:each="contributor : ${contributors}"
+											th:unless="${issue.assignees.contains(contributor)}"
+											th:text="${contributor.name}" th:value="${contributor.name}">Add
+											a contributor...</option>
+									</select>
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="deadline" class="col-sm-2 control-label">Deadline</label>
+								<div class="col-sm-10">
+									<input class="datepicker form-control deactivatable"
+										data-date-format="dd.mm.yyyy" id="deadline" name="deadline"
+										th:value="${issue.deadline} != null ? ${#calendars.format(issue.deadline,'dd.MM.yyyy')}"></input>
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="description" class="col-sm-2 control-label">Description</label>
+								<div class="col-sm-10">
+									<input type="hidden" name="description" id="description"></input>
+									<div id="sndesc" class="summernote"
+										th:utext="${issue.description}"></div>
+								</div>
+							</div>
+							<div class="form-group">
+								<div class="col-sm-offset-2 col-sm-10">
+									<button type="button" onclick="javascript:updateIssue()"
+										class="btn btn-primary fa fa-save validate">&nbsp;Save</button>
+								</div>
+							</div>
+
+						</form>
+					</div>
+					<div role="tabpanel" class="tab-pane" id="process"
+						th:if="${issue.processCode} != null and ${issue.isOpen()}">
+						<div class="container col-sm-10" style="padding: 40px" id="procform"></div>
+						<script type="text/javascript" th:inline="javascript">
+							var strState = /*[[${issue.processState}]]*/'{}';
+							Proclib.netstate = JSON.parse(strState);
+						</script>
+						<script type="text/javascript" th:utext="${issue.processCode}"></script>
+					</div>
+					<div role="tabpanel" class="tab-pane" id="state"
+						th:if="${issue.processCode} != null and ${issue.isOpen()}">
+						<div id="visualization" style="width: 100%; height: 400px"></div>
+						<script type="text/javascript">
+							$('a[data-toggle="tab"]')
+									.on(
+											'shown.bs.tab',
+											function(e) {
+												if (e.target.hash == '#state') {
+													showProcessGraph(document
+															.getElementById('visualization'));
+												}
+											});
+						</script>
+					</div>
+					<div role="tabpanel" class="tab-pane" id="contributions">
+						<div class="container">
+							<div class="row">
+								<br />
+								<div class="col-md-9 top-margin">
+									<div>
+										<ul class="timeline" id="timeline">
+											<li id="contribform"><i class="fa fa-edit bg-green"></i>
+												<div class="timeline-item">
+													<h3 class="timeline-header">New contribution</h3>
+													<div class="timeline-body">
+														<form class="form-horizontal" role="form"
+															action="issuelist" method="post"
+															data-parsley-validate="true" id="issueform">
+															<div id="sncontrib" class="summernote"></div>
+															<br />
+															<button type="button" onclick="javascript:contribute()"
+																class="btn btn-primary fa fa-check validate submit">&nbsp;Contribute</button>
+														</form>
+													</div>
+												</div></li>
+										</ul>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
 				</div>
 			</div>
 		</div>
 	</div>
+
+
+
 	<script type="text/javascript" th:inline="javascript">
 		var issue = /*[[${issue.id}]]*/-1;
 		var asgSelect = null;
@@ -150,6 +206,8 @@
 
 		$(document).ready(
 				function() {
+					Proclib.prepare();
+
 					asgSelect = $('#select-beast').selectize({
 						create : true,
 						sortField : 'text'
@@ -347,8 +405,12 @@
 		}
 
 		function contribute() {
+			contribute($('#sncontrib').code());
+		}
+
+		function contribute(c) {
 			var formData = {
-				content : $('#sncontrib').code(),
+				content : c,
 				issue : issue
 			};
 
@@ -367,6 +429,5 @@
 			});
 		}
 	</script>
-
 </body>
 </html>

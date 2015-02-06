@@ -37,6 +37,9 @@ public class Issue {
 	private Set<Contributor> assignees;
 	@ManyToMany
 	private Set<Contributor> watchers;
+	
+	private String processCode;
+	private String processState;
 
 	public Issue() {
 	}
@@ -136,19 +139,6 @@ public class Issue {
 	}
 
 	@Override
-	public String toString() {
-		return "#" + id + ": " + title;
-	}
-
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((id == null) ? 0 : id.hashCode());
-		return result;
-	}
-
-	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)
 			return true;
@@ -173,4 +163,36 @@ public class Issue {
 		this.deadline = deadline;
 	}
 
+	public String getProcessCode() {
+		return processCode;
+	}
+
+	public void setProcessCode(String processCode) {
+		this.processCode = processCode;
+	}
+
+	public String getProcessState() {
+		return processState;
+	}
+
+	public void setProcessState(String processState) {
+		this.processState = processState;
+	}
+
+	public void setOpen(boolean open) {
+		this.open = open;
+	}
+
+	@Override
+	public String toString() {
+		return "#" + id + ": " + title;
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((id == null) ? 0 : id.hashCode());
+		return result;
+	}
 }

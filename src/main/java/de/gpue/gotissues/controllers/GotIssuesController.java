@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import de.gpue.gotissues.bo.Contributor;
+import de.gpue.gotissues.bo.process.ProcessDescription;
 
 @Controller
 public class GotIssuesController implements ErrorController {
@@ -64,11 +65,12 @@ public class GotIssuesController implements ErrorController {
 
 	@RequestMapping("/issuelist")
 	public String issueList(
-			@RequestParam(value = "search", defaultValue="") String search,
-			@RequestParam(value = "expand", required=false) Long expand,
+			@RequestParam(value = "search", defaultValue = "") String search,
+			@RequestParam(value = "expand", required = false) Long expand,
 			Model model) {
 		model.addAttribute("search", search);
-		if(expand != null)model.addAttribute("expand",expand);
+		if (expand != null)
+			model.addAttribute("expand", expand);
 		return skeleton("/issuelist", model);
 	}
 
@@ -82,8 +84,37 @@ public class GotIssuesController implements ErrorController {
 
 	@RequestMapping("/contributor/{c}")
 	public String showContributor(@PathVariable("c") String c, Model model) {
-		model.addAttribute("contributor", service.getContributor(c));;
+		model.addAttribute("contributor", service.getContributor(c));
+		;
 		return skeleton("/showcontributor", model);
+	}
+
+	@RequestMapping("/processlist")
+	public String processList(Model model) {
+		return skeleton("/processlist", model);
+	}
+
+	@RequestMapping("/processes/{p}")
+	public String editProcess(@PathVariable("p") Long id, Model model) {
+		ProcessDescription pd = service.getProcess(id);
+		model.addAttribute("procid", id);
+		model.addAttribute("code", pd.getCode());
+		model.addAttribute("procname", pd.getName());
+		return skeleton("/editprocess", model);
+	}
+
+	@RequestMapping("/processes/{p}:instantiate")
+	public String instantiateProcess(@PathVariable("p") Long id, Model model) {
+		ProcessDescription pd = service.getProcess(id);
+		model.addAttribute("process", pd);
+		model.addAttribute("issues", service.getIssues(""));
+		return skeleton("/instantiate", model);
+	}
+
+	@RequestMapping("/createprocess")
+	public String createProcess(Model model) {
+		model.addAttribute("procid", -1);
+		return skeleton("/editprocess", model);
 	}
 
 	private String skeleton(String target, Model model) {
