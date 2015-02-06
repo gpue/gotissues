@@ -33,12 +33,6 @@ function confirmAction(msg) {
 	}
 }
 
-function enterAction(msg) {
-	return enterAction(msg, function(v) {
-		return v;
-	});
-}
-
 function enterAction(msg, interpreter) {
 	return function(transition) {
 		return function() {
@@ -46,7 +40,11 @@ function enterAction(msg, interpreter) {
 			document.getElementById('procform').appendChild(
 					p(ig = inputGroupButton(msg, '')));
 
-			var action = function() {
+			var action = function() {	
+				if(typeof interpreter == 'undefined'){
+					interpreter = function(v){return v};
+				}
+				
 				var value = interpreter(ig.childNodes[0].value);
 
 				if (value != null) {
