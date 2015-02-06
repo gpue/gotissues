@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+
+<html xmlns:th="http://www.thymeleaf.org"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="skeleton::head"></head>
+<body>
+	<div th:replace="skeleton::jumbotron"></div>
+	<div th:replace="skeleton::nav"></div>
+	<div th:replace="skeleton::shout"></div>
+
+	<div class="container">
+		<div class="row">
+			<h2>List of processes</h2>
+			<a href="/createprocess" class="fa fa-plus"> Create new process</a>
+		</div>
+		<div class="row">
+			<table class="table table-striped">
+				<tbody id="plist">
+				</tbody>
+			</table>
+		</div>
+	</div>
+
+	<script type="text/javascript">
+		$(document).ready(function() {
+			addProcesses();
+		});
+
+		function addProcesses() {
+			$.ajax({
+				type : "GET",
+				url : '/api/processes',
+				success : function(data) {
+					for (var i = 0; i != data.length; i++) {
+						document.getElementById("plist").appendChild(
+								last = tr(data[i].id, 'null', [
+										td(editprocesslink(data[i].name,
+												data[i].id)),
+										td(instantiateprocesslink(data[i].id)),
+										td(deleteprocesslink(data[i].id)) ]));
+					}
+				},
+				error : function() {
+					shout("danger", "Error!",
+							"Processes could be be retrieved.");
+				},
+				dataType : "json",
+				contentType : "application/json"
+			});
+		}
+	</script>
+</body>
+</html>

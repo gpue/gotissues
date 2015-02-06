@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+
+<html xmlns:th="http://www.thymeleaf.org"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="skeleton::head"></head>
+<body>
+	<div th:replace="skeleton::jumbotron"></div>
+	<div th:replace="skeleton::nav"></div>
+	<div th:replace="skeleton::shout"></div>
+	<div class="container">
+		<form class="form-horizontal" role="form" action="processlist"
+			method="post" data-parsley-validate="true" id="processform">
+			<div class="form-group">
+				<label for="title" class="col-sm-2 control-label">Issue title</label>
+				<div class="col-sm-10">
+					<input type="text" class="form-control" id="title"
+						name="title" required="required" data-parsley-length="[3,64]"
+						th:value="'['+${process.name}+']'" />
+				</div>
+			</div>
+			<div class="form-group">
+				<label for="parent" class="col-sm-2 control-label">Parent</label>
+				<div class="col-sm-10">
+					<select id="parent" name="parent" class="form-control">
+						<option selected="selected" value="-1">No
+							parent</option>
+						<option th:each="pissue : ${issues}"
+							th:text="${pissue}" th:value="${pissue.id}">PARENT</option>
+					</select>
+				</div>
+			</div>
+			<div class="form-group">
+				<div class="col-sm-offset-2 col-sm-10">
+					<button type="button" onclick="instantiateProcess()"
+						class="btn btn-primary fa fa-rocket submit">&nbsp;Instantiate</button>
+				</div>
+			</div>
+		</form>
+	</div>
+	<script type="text/javascript" th:inline="javascript">
+		var procid = /*[[${process.id}]]*/-1;
+
+		function instantiateProcess() {
+			if ($('#processform').parsley().validate()) {
+
+				var formData = {
+					id : procid,
+					title : document.getElementById("title").value,
+					parent: document.getElementById("parent").value
+				};
+
+				//submit
+				$.ajax({
+					type : "GET",
+					url : '/api/processes/' + procid + ':instantiate',
+					data : formData,
+					success : function(data) {
+						window.location.href = '/issue/'+data.id;
+					},
+					error : function() {
+						shout("danger", "Error!",
+								"Process was not changed due to an error.");
+					},
+					dataType : "json",
+					contentType : "application/json"
+				});
+			}
+		}
+	</script>
+</body>
+</html>

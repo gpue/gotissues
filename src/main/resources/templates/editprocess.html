@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+
+<html xmlns:th="http://www.thymeleaf.org"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="skeleton::head"></head>
+<body>
+	<div th:replace="skeleton::jumbotron"></div>
+	<div th:replace="skeleton::nav"></div>
+	<div th:replace="skeleton::shout"></div>
+	<div class="container">
+		<form class="form-horizontal" role="form" action="processlist"
+			method="post" data-parsley-validate="true" id="processform">
+			<div class="form-group">
+				<label for="title" class="col-sm-2 control-label">Process
+					name</label>
+				<div class="col-sm-10">
+					<input type="text" class="form-control" id="procname"
+						name="procname" placeholder="My new process" required="required"
+						data-parsley-length="[3,64]"  th:value="${procname} != null ? ${procname}"/>
+				</div>
+			</div>
+			<div class="form-group">
+				<div class="col-sm-offset-2  col-sm-10">
+					<div id="editor" style="height: 200px" th:text="${code} != null ? ${code}">//Process code</div>
+				</div>
+			</div>
+			<div class="form-group">
+				<div class="col-sm-offset-2 col-sm-10">
+					<button type="button" onclick="save()"
+						class="btn btn-primary fa fa-save submit">&nbsp;Save</button>
+				</div>
+			</div>
+		</form>
+	</div>
+	<script type="text/javascript" src="/js/ace/ace.js"></script>
+	<script type="text/javascript" th:if="${procid} != null"
+		th:inline="javascript">
+		var procid = /*[[${procid}]]*/-1;
+	</script>
+	<script type="text/javascript">
+		var editor = ace.edit("editor");
+		//editor.setTheme("ace/theme/ambiance");
+		editor.getSession().setMode("ace/mode/javascript");
+
+		function save() {
+			if (procid != -1)
+				alterProcess();
+			else
+				addProcess();
+		}
+
+		function alterProcess() {
+			if ($('#processform').parsley().validate()) {
+
+				var formData = {
+					id: procid,
+					name : document.getElementById("procname").value,
+					code : editor.getValue()
+				};
+
+				//submit
+				$.ajax({
+					type : "GET",
+					url : '/api/processes/'+procid+':alter',
+					data : formData,
+					success : function(data) {
+						window.location.href = '/processlist';
+					},
+					error : function() {
+						shout("danger", "Error!",
+								"Process was not changed due to an error.");
+					},
+					dataType : "json",
+					contentType : "application/json"
+				});
+			}
+		}
+
+		function addProcess() {
+			if ($('#processform').parsley().validate()) {
+
+				var formData = {
+					name : document.getElementById("procname").value,
+					code : editor.getValue()
+				};
+
+				//submit
+				$.ajax({
+					type : "GET",
+					url : "/api/processes:add",
+					data : formData,
+					success : function(data) {
+						window.location.href = '/processlist';
+					},
+					error : function() {
+						shout("danger", "Error!",
+								"Process was not created due to an error.");
+					},
+					dataType : "json",
+					contentType : "application/json"
+				});
+			}
+		}
+	</script>
+</body>
+</html>
