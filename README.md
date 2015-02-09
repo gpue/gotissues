@@ -22,5 +22,5 @@ A tiny issue tracker based on the Spring framework. It supports the work organiz
 ![Processes](/screenshots/processes.PNG?raw=true "Processes list")
 ![NewProcess](/screenshots/code.PNG?raw=true "New process form")
 ![Instantiate](/screenshots/instantiate.PNG?raw=true "Instatiation Form")
-![Tasks](/screenshots/taks.PNG?raw=true "Task form")
+![Tasks](/screenshots/tasks.PNG?raw=true "Task form")
 ![State](/screenshots/state.PNG?raw=true "State graph view")
