@@ -12,7 +12,7 @@ A tiny issue tracker based on the Spring framework. It supports the work organiz
 * gamification: contributing to issues gives you different amounts of points so that people may compete (be careful with your organisation's policy!)
 
 ![Login](/screenshots/login.PNG?raw=true "Login form")
-![Issues](/screenshots/issues.PNG?raw=true "Issues tree")
+![Issues](/screenshots/issuelist.PNG?raw=true "Issues tree")
 ![NewAccount](/screenshots/newaccount.PNG?raw=true "New account form")
 ![Account](/screenshots/account.PNG?raw=true "Account management form")
 ![NewIssue](/screenshots/newissue.PNG?raw=true "New issue form")
