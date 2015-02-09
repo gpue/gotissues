@@ -1,6 +1,6 @@
 var actionRegistry = new Array();
 
-function updateState() {
+function updateState(msg) {
 	$.ajax({
 		type : "GET",
 		url : '/api/issue/' + issue + ':updateprocstate',
@@ -8,7 +8,13 @@ function updateState() {
 			state : JSON.stringify(Proclib.netstate)
 		},
 		dataType : "json",
-		contentType : "application/json"
+		contentType : "application/json",
+		error : function() {
+			shout("error", "Error!", "Updating process statee failed.");
+		},
+		success : function() {
+			contribute(msg);
+		}
 	});
 }
 
@@ -21,8 +27,7 @@ function confirmAction(msg) {
 
 			var action = function() {
 				transition.finalize();
-				updateState();
-				contribute("Confirmed process task: " + msg);
+				updateState("Confirmed process task: " + msg);
 			};
 
 			var idx = actionRegistry.push(action) - 1;
@@ -40,18 +45,19 @@ function enterAction(msg, interpreter) {
 			document.getElementById('procform').appendChild(
 					p(ig = inputGroupButton(msg, '')));
 
-			var action = function() {	
-				if(typeof interpreter == 'undefined'){
-					interpreter = function(v){return v};
+			var action = function() {
+				if (typeof interpreter == 'undefined') {
+					interpreter = function(v) {
+						return v
+					};
 				}
-				
+
 				var value = interpreter(ig.childNodes[0].value);
 
 				if (value != null) {
 					transition.finalize();
 					Proclib.netstate.data[transition.name] = value;
-					updateState();
-					contribute("User entered required information (" + msg
+					updateState("User entered required information (" + msg
 							+ "): " + value);
 				}
 			};

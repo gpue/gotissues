@@ -41,6 +41,8 @@ public class Issue {
 	
 	@Lob
 	private String processCode;
+	
+	@Lob
 	private String processState;
 
 	public Issue() {

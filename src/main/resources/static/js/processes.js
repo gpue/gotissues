@@ -7,7 +7,7 @@ Proclib = {
 	prepare : function() {
 		if(!Proclib.netstate.init){
 			Proclib.netstate.marking = Proclib.initmarking;
-			Proclib.netstate.data = [];
+			Proclib.netstate.data =  {};
 			Proclib.netstate.init = true;
 		}
 		

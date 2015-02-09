@@ -6,6 +6,7 @@ import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.Transport;
+import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
@@ -13,12 +14,14 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 public class MailUtil {
-	
+
 	private static final Log log = LogFactory.getLog(MailUtil.class);
-	
-	public static void sendHTMLMail(String from, String to, String subject, String text) {
-		log.info("mail from "+from+" to "+to+" with subject '"+subject+"':\n"+text);
-		
+
+	public static void sendHTMLMail(String from, String to, String subject,
+			String text) throws AddressException, MessagingException {
+		log.info("mail from " + from + " to " + to + " with subject '"
+				+ subject + "':\n" + text);
+
 		// Assuming you are sending email from localhost
 		String host = "localhost";
 
@@ -31,25 +34,20 @@ public class MailUtil {
 		// Get the default Session object.
 		Session session = Session.getDefaultInstance(properties);
 
-		try {
-			// Create a default MimeMessage object.
-			MimeMessage message = new MimeMessage(session);
+		// Create a default MimeMessage object.
+		MimeMessage message = new MimeMessage(session);
 
-			// Set From: header field of the header.
-			message.setFrom(new InternetAddress(from));
-			
-			message.setSubject(subject);
+		// Set From: header field of the header.
+		message.setFrom(new InternetAddress(from));
 
-			// Set To: header field of the header.
-			message.addRecipient(Message.RecipientType.TO, new InternetAddress(
-					to));
+		message.setSubject(subject);
 
-			message.setContent(text, "text/html; charset=utf-8");
+		// Set To: header field of the header.
+		message.addRecipient(Message.RecipientType.TO, new InternetAddress(to));
 
-			// Send message
-			Transport.send(message);
-		} catch (MessagingException mex) {
-			mex.printStackTrace();
-		}
+		message.setContent(text, "text/html; charset=utf-8");
+
+		// Send message
+		Transport.send(message);
 	}
 }

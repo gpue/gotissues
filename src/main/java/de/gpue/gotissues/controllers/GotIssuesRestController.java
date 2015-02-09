@@ -16,8 +16,6 @@ import java.util.stream.Collectors;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -78,7 +76,6 @@ public class GotIssuesRestController {
 				Math.min(il.size(), PAGE_SIZE * page));
 	}
 
-	@Cacheable("default")
 	public List<Issue> getIssues(String search) {
 
 		Set<Issue> found = new HashSet<Issue>();
@@ -190,7 +187,6 @@ public class GotIssuesRestController {
 
 	@RequestMapping(value = "/issues:add", method = { RequestMethod.GET,
 			RequestMethod.POST })
-	@CacheEvict("default")
 	public Issue addIssue(
 			@RequestParam("title") String title,
 			@RequestParam(value = "description", defaultValue = "") String description,
@@ -224,7 +220,6 @@ public class GotIssuesRestController {
 	@SuppressWarnings("unchecked")
 	@RequestMapping(value = "/issues/{i}:alter", method = { RequestMethod.GET,
 			RequestMethod.POST })
-	@CacheEvict("default")
 	public Issue alterIssue(
 			@PathVariable("i") Long id,
 			@RequestParam(value = "title", required = false) String title,
@@ -340,7 +335,6 @@ public class GotIssuesRestController {
 
 	@RequestMapping(value = "/issues/{i}:delete", method = { RequestMethod.GET,
 			RequestMethod.POST })
-	@CacheEvict("default")
 	public boolean deleteIssue(@PathVariable("i") Long id) {
 		Assert.isTrue(getMe().isAdmin());
 		Assert.notNull(id);
@@ -462,7 +456,6 @@ public class GotIssuesRestController {
 		return true;
 	}
 
-	@CacheEvict("default")
 	private Contribution contribute(String mailSubject, String content,
 			Long issue, String contributor, Boolean revisable, int points) {
 		Contribution c = new Contribution(content, new Date(), getIssue(issue),
@@ -477,7 +470,7 @@ public class GotIssuesRestController {
 				MailUtil.sendHTMLMail(notifierMail, r.getMail(), mailSubject,
 						content);
 			} catch (Exception e) {
-				e.printStackTrace();
+				System.err.println(e);
 			}
 
 		}
@@ -636,7 +629,6 @@ public class GotIssuesRestController {
 
 	@RequestMapping(value = "/contributors/{c}:alter", method = {
 			RequestMethod.GET, RequestMethod.POST })
-	@CacheEvict("default")
 	public Contributor alterContributor(
 			@PathVariable("c") String name,
 			@RequestParam(value = "fullname", required = false) String fullname,
@@ -739,7 +731,6 @@ public class GotIssuesRestController {
 
 	@RequestMapping(value = "/processes:add", method = { RequestMethod.GET,
 			RequestMethod.POST })
-	@CacheEvict("default")
 	public ProcessDescription addProcess(@RequestParam("name") String name,
 			@RequestParam("code") String code) {
 		ProcessDescription pd = new ProcessDescription();
@@ -750,7 +741,6 @@ public class GotIssuesRestController {
 
 	@RequestMapping(value = "/processes/{p}:alter", method = {
 			RequestMethod.GET, RequestMethod.POST })
-	@CacheEvict("default")
 	public ProcessDescription alterProcess(@PathVariable("p") Long id,
 			@RequestParam("name") String name, @RequestParam("code") String code) {
 		ProcessDescription pd = processes.findOne(id);
@@ -761,14 +751,12 @@ public class GotIssuesRestController {
 	
 	@RequestMapping(value = "/processes/{p}:delete", method = {
 			RequestMethod.GET, RequestMethod.POST })
-	@CacheEvict("default")
 	public void deleteProcess(@PathVariable("p") Long id) {
 		processes.delete(id);
 	}
 
 	@RequestMapping(value = "/processes/{p}:instantiate", method = {
 			RequestMethod.GET, RequestMethod.POST })
-	@CacheEvict("default")
 	public Issue instantiateProcess(@PathVariable("p") Long id,
 			@RequestParam("parent") Long parent,
 			@RequestParam("title") String title) {
@@ -792,11 +780,13 @@ public class GotIssuesRestController {
 
 	@RequestMapping(value = "/issue/{i}:updateprocstate", method = {
 			RequestMethod.GET, RequestMethod.POST })
-	@CacheEvict("default")
 	public Issue updateProcessState(@PathVariable("i") Long id,
 			@RequestParam("state") String state) {
 		Issue i = issues.findOne(id);
 		i.setProcessState(state);
+		
+		System.err.println("Saving issue #"+id+" with state "+state);
+		
 		i = issues.save(i);
 		return i;
 	}
