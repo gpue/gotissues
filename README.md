@@ -1,7 +1,7 @@
 gotissues
 =========
 
-A tiny issue tracker based on the Spring framework. It supports the work organization of groups of people and comes with some special features that makes gotissues unique:
+A tiny issue tracker based on the Spring framework. It supports the work organization of groups of people and comes with some special features that make gotissues unique:
 
 * web-based, responsive user interface
 * tree-structured issues (you can have sub-issues)
