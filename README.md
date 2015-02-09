@@ -16,7 +16,7 @@ A tiny issue tracker based on the Spring framework. It supports the work organiz
 ![NewAccount](/screenshots/newaccount.PNG?raw=true "New account form")
 ![Account](/screenshots/account.PNG?raw=true "Account management form")
 ![NewIssue](/screenshots/newissue.PNG?raw=true "New issue form")
-![Issue](/screenshots/login.PNG?raw=true "Login Form")
+![Issue](/screenshots/issue.PNG?raw=true "Issue editing form")
 ![Contributions](/screenshots/contributions.PNG?raw=true "Contribution Form")
 ![Stats](/screenshots/stats.PNG?raw=true "Statistics view")
 ![Processes](/screenshots/processes.PNG?raw=true "Processes list")
