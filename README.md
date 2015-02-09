@@ -11,4 +11,16 @@ A tiny issue tracker based on the Spring framework. It supports the work organiz
 * passwort encryption
 * gamification: contributing to issues gives you different amounts of points so that people may compete (be careful with your organisation's policy!)
 
-![Login](/screenshots/login.PNG?raw=true "Login Form")
+![Login](/screenshots/login.PNG?raw=true "Login form")
+![Issues](/screenshots/issues.PNG?raw=true "Issues tree")
+![NewAccount](/screenshots/newaccount.PNG?raw=true "New account form")
+![Account](/screenshots/account.PNG?raw=true "Account management form")
+![NewIssue](/screenshots/newissue.PNG?raw=true "New issue form")
+![Issue](/screenshots/login.PNG?raw=true "Login Form")
+![Contributions](/screenshots/login.PNG?raw=true "Login Form")
+![Stats](/screenshots/login.PNG?raw=true "Login Form")
+![Processes](/screenshots/processes.PNG?raw=true "Login Form")
+![NewProcess](/screenshots/code.PNG?raw=true "New process form")
+![Instantiate](/screenshots/instantiate.PNG?raw=true "Instatiation Form")
+![Tasks](/screenshots/taks.PNG?raw=true "Task form")
+![State](/screenshots/state.PNG?raw=true "State graph view")
