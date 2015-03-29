@@ -36,7 +36,7 @@ import de.gpue.gotissues.repo.IssueRepository;
 import de.gpue.gotissues.repo.ProcessDescriptionRepository;
 import de.gpue.gotissues.util.MailUtil;
 
-@RestController
+@RestController("RestController")
 @RequestMapping(value = "/api")
 public class GotIssuesRestController {
 	private static final int PARENT_NONE = -1;

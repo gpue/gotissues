@@ -9,7 +9,7 @@ import org.springframework.boot.context.web.SpringBootServletInitializer;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 
-@Configuration
+@Configuration("GotIssuesApp")
 @EnableAutoConfiguration
 @ComponentScan
 public class GotIssuesApplication extends SpringBootServletInitializer{

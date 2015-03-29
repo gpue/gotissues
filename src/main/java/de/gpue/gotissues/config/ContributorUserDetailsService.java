@@ -9,7 +9,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import de.gpue.gotissues.bo.Contributor;
 import de.gpue.gotissues.repo.ContributorRepository;
 
-@Configuration
+@Configuration("UserDetailsService")
 public class ContributorUserDetailsService implements UserDetailsService {
 	public static GrantedAuthority ADMIN = new GrantedAuthority() {
 		

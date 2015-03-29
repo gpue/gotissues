@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import de.gpue.gotissues.bo.Contributor;
 import de.gpue.gotissues.bo.process.ProcessDescription;
 
-@Controller
+@Controller("WebController")
 public class GotIssuesController implements ErrorController {
 	@Autowired
 	private GotIssuesRestController service;
