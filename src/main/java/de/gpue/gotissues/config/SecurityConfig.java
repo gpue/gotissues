@@ -62,7 +62,7 @@ public class SecurityConfig extends GlobalAuthenticationConfigurerAdapter {
 	}
 
 	@Configuration("APIWebSecurtiy")
-	@Order(1)
+	@Order(2)
 	public static class ApiWebSecurityConfigurationAdapter extends
 			WebSecurityConfigurerAdapter {
 
@@ -76,7 +76,7 @@ public class SecurityConfig extends GlobalAuthenticationConfigurerAdapter {
 	}
 
 	@Configuration("FormLogin")
-	@Order(2)
+	@Order(3)
 	public static class FormLoginWebSecurityConfigurerAdapter extends
 			WebSecurityConfigurerAdapter {
 
