@@ -94,7 +94,7 @@ public class SecurityConfig extends GlobalAuthenticationConfigurerAdapter {
 	
 	
 	@Aspect
-	@Component
+	@Component("APIPasswordFilter")
 	public static class PasswordFilterAspect{
 		
 		private static String SECURE_PKG_PREFIX = "de.gpue";
