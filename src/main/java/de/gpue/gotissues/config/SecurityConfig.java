@@ -22,7 +22,7 @@ import de.gpue.gotissues.bo.Contribution;
 import de.gpue.gotissues.bo.Contributor;
 import de.gpue.gotissues.bo.Issue;
 
-@Configuration
+@Configuration("SecurityConfig")
 @EnableWebSecurity
 public class SecurityConfig extends GlobalAuthenticationConfigurerAdapter {
 
@@ -61,7 +61,7 @@ public class SecurityConfig extends GlobalAuthenticationConfigurerAdapter {
 				: encoder;
 	}
 
-	@Configuration
+	@Configuration("APIWebSecurtiy")
 	@Order(1)
 	public static class ApiWebSecurityConfigurationAdapter extends
 			WebSecurityConfigurerAdapter {
@@ -75,7 +75,7 @@ public class SecurityConfig extends GlobalAuthenticationConfigurerAdapter {
 		}
 	}
 
-	@Configuration
+	@Configuration("FormLogin")
 	public static class FormLoginWebSecurityConfigurerAdapter extends
 			WebSecurityConfigurerAdapter {
 
