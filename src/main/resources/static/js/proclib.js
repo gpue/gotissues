@@ -3,7 +3,7 @@ var actionRegistry = new Array();
 function updateState(msg) {
 	$.ajax({
 		type : "GET",
-		url : '/api/issue/' + issue + ':updateprocstate',
+		url : baseURL+'/api/issue/' + issue + ':updateprocstate',
 		data : {
 			state : JSON.stringify(Proclib.netstate)
 		},

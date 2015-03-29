@@ -8,7 +8,7 @@
 	<div th:replace="skeleton::nav"></div>
 	<div th:replace="skeleton::shout"></div>
 	<div class="container">
-		<form class="form-horizontal" role="form" action="processlist"
+		<form class="form-horizontal" role="form" th:action="@{/processlist}"
 			method="post" data-parsley-validate="true" id="processform">
 			<div class="form-group">
 				<label for="title" class="col-sm-2 control-label">Issue title</label>
@@ -52,10 +52,10 @@
 				//submit
 				$.ajax({
 					type : "GET",
-					url : '/api/processes/' + procid + ':instantiate',
+					url : baseURL+'/api/processes/' + procid + ':instantiate',
 					data : formData,
 					success : function(data) {
-						window.location.href = '/issue/'+data.id;
+						window.location.href = baseURL+'/issue/'+data.id;
 					},
 					error : function() {
 						shout("danger", "Error!",

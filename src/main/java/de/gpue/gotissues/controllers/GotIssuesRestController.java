@@ -64,6 +64,13 @@ public class GotIssuesRestController {
 	@Value("${gotissues.notifier.mail}")
 	private String notifierMail = "";
 
+	@Value("${gotissues.baseurl}")
+	private String baseURL = "";
+	
+	public String getBaseURL() {
+		return baseURL;
+	}
+
 	@RequestMapping("/issues")
 	public List<Issue> getIssues(
 			@RequestParam(value = "page", required = false) Integer page,
@@ -362,7 +369,7 @@ public class GotIssuesRestController {
 		StringBuilder b = new StringBuilder();
 		b.append("<ul>");
 
-		assignees.forEach(a -> b.append("<li><a href=\"/contributor/" + a
+		assignees.forEach(a -> b.append("<li><a href=\""+baseURL+"/contributor/" + a
 				+ "\">" + a + "</a></li>"));
 
 		b.append("</ul>");

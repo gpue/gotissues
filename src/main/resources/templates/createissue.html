@@ -119,10 +119,10 @@
 				//submit
 				$.ajax({
 					type : "GET",
-					url : "/api/issues:add",
+					url : baseURL+"/api/issues:add",
 					data : formData,
 					success : function(data) {
-						window.location.href = '/issue/' + data.id;
+						window.location.href = baseURL+'/issue/' + data.id;
 					},
 					error : function() {
 						shout("danger", "Error!",

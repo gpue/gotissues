@@ -13,10 +13,10 @@
 <link href='http://fonts.googleapis.com/css?family=Open+Sans'
 	rel='stylesheet' type='text/css'></link>
 <!-- Timeline -->
-<link href="/css/timeline.css" rel="stylesheet"></link>
+<link th:href="@{/css/timeline.css}" rel="stylesheet"></link>
 
 <!-- include jquery and bootstrap and font-awesome -->
-<script src="/js/jquery-2.1.1.min.js"></script>
+<script th:src="@{/js/jquery-2.1.1.min.js}"></script>
 <link
 	href="//netdna.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css"
 	rel="stylesheet"></link>
@@ -27,47 +27,48 @@
 	rel="stylesheet"></link>
 
 <!-- include summernote -->
-<link href="/css/summernote.css" rel="stylesheet"></link>
-<script src="/js/summernote.min.js"></script>
+<link th:href="@{/css/summernote.css}" rel="stylesheet"></link>
+<script th:src="@{/js/summernote.min.js}"></script>
 
 <!-- include treetable -->
-<link href="/css/jquery.treetable.css" rel="stylesheet"></link>
-<script type="text/javascript" src="/js/jquery.treetable.js"></script>
+<link th:href="@{/css/jquery.treetable.css}" rel="stylesheet"></link>
+<script type="text/javascript" th:src="@{/js/jquery.treetable.js}"></script>
 
 <!-- include selectize -->
-<link href="/css/selectize.bootstrap3.css" rel="stylesheet"></link>
-<script type="text/javascript" src="/js/selectize.js"></script>
+<link th:href="@{/css/selectize.bootstrap3.css}" rel="stylesheet"></link>
+<script type="text/javascript" th:src="@{/js/selectize.js}"></script>
 
 <!-- include parsley (validation) -->
-<script src="/js/parsley.min.js" type="text/javascript"></script>
+<script th:src="@{/js/parsley.min.js}" type="text/javascript"></script>
 
 <!-- include data formatter -->
-<script src="/js/jquery-dateFormat.min.js" type="text/javascript"></script>
+<script th:src="@{/js/jquery-dateFormat.min.js}" type="text/javascript"></script>
 
 <!-- include jquery-appear -->
-<script src="/js/jquery.appear.js" type="text/javascript"></script>
+<script th:src="@{/js/jquery.appear.js}" type="text/javascript"></script>
 
 <!-- include Chart.js -->
-<script src="/js/excanvas.js" type="text/javascript"></script>
-<script src="/js/Chart.min.js" type="text/javascript"></script>
+<script th:src="@{/js/excanvas.js}" type="text/javascript"></script>
+<script th:src="@{/js/Chart.min.js}" type="text/javascript"></script>
 
 <!-- include datepicker -->
-<link href="/css/datepicker3.css" rel="stylesheet"></link>
-<script type="text/javascript" src="/js/bootstrap-datepicker.js"></script>
+<link th:href="@{/css/datepicker3.css}" rel="stylesheet"></link>
+<script type="text/javascript" th:src="@{/js/bootstrap-datepicker.js}"></script>
 
 <!-- vis -->
-<link href="/css/vis.css" rel="stylesheet"></link>
-<script type="text/javascript" src="/js/vis.js"></script>
+<link th:href="@{/css/vis.css}" rel="stylesheet"></link>
+<script type="text/javascript" th:src="@{/js/vis.js}"></script>
 
 <!-- own scripts -->
-<script type="text/javascript" src="/js/processes.js"></script>
-<script type="text/javascript" src="/js/gotissues.js"></script>
-<script type="text/javascript" src="/js/proclib.js"></script>
+<script type="text/javascript" th:src="@{/js/processes.js}"></script>
+<script type="text/javascript" th:src="@{/js/gotissues.js}"></script>
+<script type="text/javascript" th:src="@{/js/proclib.js}"></script>
 
 <title>Got Issues?</title>
 <script type="text/javascript" th:inline="javascript">
 	var me = /*[[${me.name}]]*/"";
 	var admin = /*[[${me.isAdmin()}]]*/false;
+	var baseURL = /*[[${baseurl}]]*/"";
 </script>
 </head>
 <body>
@@ -105,15 +106,15 @@
 						</ul>
 					</li>
 
-					<li><a href="/createissue"><i class="fa fa-plus bg-black"></i>&nbsp;
+					<li><a th:href="@{/createissue}"><i class="fa fa-plus bg-black"></i>&nbsp;
 							Create issue</a></li>
-					<li><a href="/processlist"><i class="fa fa-cogs bg-black"></i>&nbsp;
+					<li><a th:href="@{/processlist}"><i class="fa fa-cogs bg-black"></i>&nbsp;
 							Processes</a></li>
-					<li><a href="/userstats"><i class="fa fa-tasks bg-black"></i>&nbsp;
+					<li><a th:href="@{/userstats}"><i class="fa fa-tasks bg-black"></i>&nbsp;
 							Users and statistics</a></li>
 					<li>
 						<form class="navbar-form navbar-left" role="search" method="get"
-							action="/issuelist">
+							th:action="@{/issuelist}">
 							<div class="input-group">
 								<input th:attr="value=${search==null ? '' : search}" type="text"
 									class="form-control" id="search" name="search"
@@ -147,12 +148,12 @@
 				</ul>
 				<ul class="nav navbar-nav navbar-right">
 					<li th:if="${me.isAdmin()} == true"><a type="button"
-						class="navbar-link" href="/createaccount"><i
+						class="navbar-link" th:href="@{/createaccount}"><i
 							class="fa fa-user bg-black"></i>&nbsp;Create account</a></li>
 					<li><a type="button" class="navbar-link"
 						th:href="@{/account/{id}(id=${me.name})}"><i
 							class="fa fa-user bg-black"></i>&nbsp;My account</a></li>
-					<li><a type="button" class="navbar-link" href="/logout"><i
+					<li><a type="button" class="navbar-link" th:href="@{/logout}"><i
 							class="fa fa-sign-out bg-black"></i>&nbsp;Sign out</a></li>
 				</ul>
 			</div>

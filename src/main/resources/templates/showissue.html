@@ -176,7 +176,7 @@
 													<h3 class="timeline-header">New contribution</h3>
 													<div class="timeline-body">
 														<form class="form-horizontal" role="form"
-															action="issuelist" method="post"
+															th:action="@{/issuelist}" method="post"
 															data-parsley-validate="true" id="issueform">
 															<div id="sncontrib" class="summernote"></div>
 															<br />
@@ -237,7 +237,7 @@
 
 					$.ajax({
 						type : "GET",
-						url : '/api/issues/' + issue,
+						url : baseURL+'/api/issues/' + issue,
 						success : function(data) {
 							updateOptions(data);
 						},
@@ -250,7 +250,7 @@
 		function addContributions() {
 			$.ajax({
 				type : "GET",
-				url : '/api/issues/' + issue + '/contributions',
+				url : baseURL+'/api/issues/' + issue + '/contributions',
 				data : {
 					page : pageNum
 				},
@@ -333,7 +333,7 @@
 		function watch() {
 			$.ajax({
 				type : "GET",
-				url : '/api/issues/' + issue + ':watch',
+				url : baseURL+'/api/issues/' + issue + ':watch',
 				success : function(data) {
 					updateOptions(data);
 				},
@@ -345,7 +345,7 @@
 		function unwatch() {
 			$.ajax({
 				type : "GET",
-				url : '/api/issues/' + issue + ':unwatch',
+				url : baseURL+'/api/issues/' + issue + ':unwatch',
 				success : function(data) {
 					updateOptions(data);
 				},
@@ -357,7 +357,7 @@
 		function close() {
 			$.ajax({
 				type : "GET",
-				url : '/api/issues/' + issue + ':close',
+				url : baseURL+'/api/issues/' + issue + ':close',
 				success : function(data) {
 					window.location.reload();
 				},
@@ -369,7 +369,7 @@
 		function open() {
 			$.ajax({
 				type : "GET",
-				url : '/api/issues/' + issue + ':open',
+				url : baseURL+'/api/issues/' + issue + ':open',
 				success : function(data) {
 					window.location.reload();
 				},
@@ -393,7 +393,7 @@
 
 				$.ajax({
 					type : "GET",
-					url : '/api/issues/' + issue + ':alter',
+					url : baseURL+'/api/issues/' + issue + ':alter',
 					data : formData,
 					success : function(data) {
 						window.location.reload();
@@ -416,7 +416,7 @@
 
 			$.ajax({
 				type : "GET",
-				url : '/api/issues/' + issue + ':contribute',
+				url : baseURL+'/api/issues/' + issue + ':contribute',
 				data : formData,
 				success : function(data) {
 					window.location.reload();

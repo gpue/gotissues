@@ -37,7 +37,7 @@
 		function addIssues() {
 			$.ajax({
 				type : "GET",
-				url : '/api/issues',
+				url : baseURL+'/api/issues',
 				data : {
 					page : pageNum,
 					search : searchNeedle

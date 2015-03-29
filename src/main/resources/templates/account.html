@@ -87,7 +87,7 @@
 						contributor = urlArr[urlArr.length - 1];
 						$.ajax({
 							type : "GET",
-							url : '/api/contributors/' + contributor,
+							url : baseURL+'/api/contributors/' + contributor,
 							success : function(data) {
 								updateForm(data);
 							},
@@ -100,7 +100,7 @@
 				function updateMe(data) {
 					$.ajax({
 						type : "GET",
-						url : '/api/contributors:me',
+						url : baseURL+'/api/contributors:me',
 						success : function(me) {
 							showOptions(me.admin, data);
 						},
@@ -112,7 +112,7 @@
 				function enable(yesno) {
 					$.ajax({
 						type : "GET",
-						url : '/api/contributors/' + contributor + ':enable',
+						url : baseURL+'/api/contributors/' + contributor + ':enable',
 						data : {
 							enabled : yesno
 						},
@@ -127,7 +127,7 @@
 				function grant(yesno) {
 					$.ajax({
 						type : "GET",
-						url : '/api/contributors/' + contributor + ':grant',
+						url : baseURL+'/api/contributors/' + contributor + ':grant',
 						data : {
 							admin : yesno
 						},
@@ -184,9 +184,9 @@
 
 						var curl = "";
 						if (contributor == null) {
-							curl = "/api/contributors:add";
+							curl = baseURL+"/api/contributors:add";
 						} else {
-							curl = '/api/contributors/' + contributor
+							curl = baseURL+'/api/contributors/' + contributor
 									+ ':alter';
 						}
 

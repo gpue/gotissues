@@ -69,7 +69,7 @@ function showProcessGraph(container) {
 function deleteContribution(c) {
 	$.ajax({
 		type : "GET",
-		url : '/api/contributions/' + c + ':delete',
+		url : baseURL+'/api/contributions/' + c + ':delete',
 		success : function(data) {
 			window.location.reload();
 		},
@@ -84,7 +84,7 @@ function deleteContribution(c) {
 function deleteIssue(i) {
 	$.ajax({
 		type : "GET",
-		url : '/api/issues/' + i + ':delete',
+		url : baseURL+'/api/issues/' + i + ':delete',
 		success : function(data) {
 			window.location.href = "/issuelist";
 		},
@@ -180,21 +180,21 @@ function txt(str) {
 
 function issuelink(id, title) {
 	var a = document.createElement('A');
-	a.href = '/issue/' + id;
+	a.href = baseURL+'/issue/' + id;
 	a.appendChild(txt('#' + id + ' ' + title));
 	return a;
 }
 
 function userlink(name) {
 	var a = document.createElement('A');
-	a.href = '/contributor/' + name;
+	a.href = baseURL+'/contributor/' + name;
 	a.appendChild(txt(name));
 	return a;
 }
 
 function childlink(parentId) {
 	var a = document.createElement('A');
-	a.href = '/issue/' + parentId + '/createissue';
+	a.href = baseURL+'/issue/' + parentId + '/createissue';
 	a.appendChild(txt('Create child issue'));
 	return a;
 }
@@ -242,7 +242,7 @@ function timelineEntry(cdata) {
 
 function editprocesslink(name, id) {
 	var a = document.createElement('A');
-	a.href = '/processes/' + id;
+	a.href = baseURL+'/processes/' + id;
 	a.setAttribute("class", "fa fa-cogs");
 	a.appendChild(txt(' ' + name));
 	return a;
@@ -253,9 +253,9 @@ function deleteProcess(id) {
 
 		$.ajax({
 			type : "GET",
-			url : '/api/processes/' + id + ':delete',
+			url : baseURL+'/api/processes/' + id + ':delete',
 			success : function(data) {
-				window.location.href = '/processlist';
+				window.location.href = baseURL+'/processlist';
 			},
 			error : function() {
 				shout("danger", "Error!",
@@ -278,7 +278,7 @@ function deleteprocesslink(id) {
 
 function instantiateprocesslink(id) {
 	var a = document.createElement('A');
-	a.href = '/processes/' + id + ':instantiate';
+	a.href = baseURL+'/processes/' + id + ':instantiate';
 	a.appendChild(txt(' Instantiate'));
 	a.setAttribute("class", "fa fa-rocket");
 

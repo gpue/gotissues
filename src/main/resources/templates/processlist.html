@@ -11,7 +11,7 @@
 	<div class="container">
 		<div class="row">
 			<h2>List of processes</h2>
-			<a href="/createprocess" class="fa fa-plus"> Create new process</a>
+			<a th:href="@{/createprocess}" class="fa fa-plus"> Create new process</a>
 		</div>
 		<div class="row">
 			<table class="table table-striped">
@@ -29,7 +29,7 @@
 		function addProcesses() {
 			$.ajax({
 				type : "GET",
-				url : '/api/processes',
+				url : baseURL+'/api/processes',
 				success : function(data) {
 					for (var i = 0; i != data.length; i++) {
 						document.getElementById("plist").appendChild(

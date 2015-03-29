@@ -45,7 +45,7 @@
 		function addContributions() {
 			$.ajax({
 				type : "GET",
-				url : '/api/contributors/'+contributor+'/contributions',
+				url : baseURL+'/api/contributors/'+contributor+'/contributions',
 				data : {
 					page : pageNum
 				},

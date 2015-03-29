@@ -125,6 +125,7 @@ public class GotIssuesController implements ErrorController {
 				.size());
 		model.addAttribute("assigncount",
 				service.getAssignedIssues(me.getName()).size());
+		model.addAttribute("baseurl", service.getBaseURL());
 		return target;
 	}
 
