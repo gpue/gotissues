@@ -76,6 +76,7 @@ public class SecurityConfig extends GlobalAuthenticationConfigurerAdapter {
 	}
 
 	@Configuration("FormLogin")
+	@Order(2)
 	public static class FormLoginWebSecurityConfigurerAdapter extends
 			WebSecurityConfigurerAdapter {
 
