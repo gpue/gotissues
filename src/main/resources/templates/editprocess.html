@@ -32,7 +32,7 @@
 			</div>
 		</form>
 	</div>
-	<script type="text/javascript" src="/js/ace/ace.js"></script>
+	<script type="text/javascript" th:src="@{/js/ace/ace.js}"></script>
 	<script type="text/javascript" th:if="${procid} != null"
 		th:inline="javascript">
 		var procid = /*[[${procid}]]*/-1;
