@@ -39,6 +39,21 @@ public class Contributor implements UserDetails {
 	@Transient
 	private int points;
 
+	public Contributor() {
+	}
+
+	public Contributor(String name, String fullName, String mail, String password) {
+		this.name = name;
+		this.mail = mail;
+		this.enabled = true;
+		this.admin = false;
+		this.password = password;
+		this.deadlineRaisedCount = 0;
+		this.assignedCount = 0;
+		this.points = 0;
+		this.fullName = fullName;
+	}
+
 	public int getAssignedCount() {
 		return assignedCount;
 	}
@@ -54,21 +69,6 @@ public class Contributor implements UserDetails {
 	public void setDeadlineRaisedCount(int deadlineRaisedCount) {
 		this.deadlineRaisedCount = deadlineRaisedCount;
 	}
-
-	public Contributor() {
-	}
-
-	public Contributor(String name, String fullName, String mail, String password) {
-		this.name = name;
-		this.mail = mail;
-		this.enabled = true;
-		this.admin = false;
-		this.password = password;
-		this.deadlineRaisedCount = 0;
-		this.assignedCount = 0;
-		this.points = 0;
-		this.fullName = fullName;
-	}	
 
 	public String getFullName() {
 		return fullName;

@@ -26,9 +26,6 @@ public class Contribution {
 	private boolean revisable;
 	private int points;
 
-	public Contribution() {
-	}
-
 	public Contribution(String content, Date created, Issue issue,
 			Contributor contributor, Boolean revisable, int points) {
 		this.content = content;
@@ -37,6 +34,9 @@ public class Contribution {
 		this.contributor = contributor;
 		this.revisable = revisable;
 		this.points = points;
+	}
+
+	public Contribution() {
 	}
 
 	public Long getId() {

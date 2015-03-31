@@ -26,7 +26,7 @@ import de.gpue.gotissues.bo.Issue;
 @EnableWebSecurity
 public class SecurityConfig extends GlobalAuthenticationConfigurerAdapter {
 
-	private final Log log = LogFactory.getLog(getClass());
+	private final Log LOG = LogFactory.getLog(getClass());
 
 	private PasswordEncoder encoder;
 	private ContributorUserDetailsService cuds;
@@ -35,29 +35,28 @@ public class SecurityConfig extends GlobalAuthenticationConfigurerAdapter {
 	public void init(AuthenticationManagerBuilder auth) throws Exception {
 		auth.userDetailsService(userDetailsService()).passwordEncoder(
 				passwordEncoder());
-		log.debug("configured global authentification");
+		LOG.debug("configured global authentification");
 
 		try {
 			cuds.loadUserByUsername("admin");
 		} catch (UsernameNotFoundException e) {
-			Contributor admin = new Contributor("admin", "", "test@example.com",
-					encoder.encode("vivaris"));
+			Contributor admin = new Contributor("admin", "",
+					"test@example.com", encoder.encode("vivaris"));
 			admin.setAdmin(true);
 			cuds.getRepo().save(admin);
 
-			log.info("Standard user admin with password 'vivaris' was added.");
+			LOG.info("Standard user admin with password 'vivaris' was added.");
 		}
 	}
 
 	@Bean
 	public ContributorUserDetailsService userDetailsService() {
-		return cuds == null ? (cuds = new ContributorUserDetailsService())
-				: cuds;
+		return cuds == null ? cuds = new ContributorUserDetailsService() : cuds;
 	}
 
 	@Bean
 	public PasswordEncoder passwordEncoder() {
-		return encoder == null ? (encoder = new BCryptPasswordEncoder())
+		return encoder == null ? encoder = new BCryptPasswordEncoder()
 				: encoder;
 	}
 
@@ -66,12 +65,13 @@ public class SecurityConfig extends GlobalAuthenticationConfigurerAdapter {
 	public static class ApiWebSecurityConfigurationAdapter extends
 			WebSecurityConfigurerAdapter {
 
-		private final Log log = LogFactory.getLog(getClass());
+		private final Log LOG = LogFactory.getLog(getClass());
 
+		@Override
 		protected void configure(HttpSecurity http) throws Exception {
 			http.antMatcher("/api/**").authorizeRequests().anyRequest()
 					.authenticated().and().httpBasic();
-			log.debug("configured API authentification");
+			LOG.debug("configured API authentification");
 		}
 	}
 
@@ -80,39 +80,44 @@ public class SecurityConfig extends GlobalAuthenticationConfigurerAdapter {
 	public static class FormLoginWebSecurityConfigurerAdapter extends
 			WebSecurityConfigurerAdapter {
 
-		private final Log log = LogFactory.getLog(getClass());
+		private final Log LOG = LogFactory.getLog(getClass());
 
 		@Override
 		protected void configure(HttpSecurity http) throws Exception {
 			http.authorizeRequests().anyRequest().authenticated().and()
-					.formLogin()
-					.loginPage("/login").defaultSuccessUrl("/issuelist",true).permitAll().and().logout()
-					.logoutUrl("/logout").logoutSuccessUrl("/login");
+					.formLogin().loginPage("/login")
+					.defaultSuccessUrl("/issuelist", true).permitAll().and()
+					.logout().logoutUrl("/logout").logoutSuccessUrl("/login");
 			http.csrf().disable();
-			log.debug("configured API authentification");
+			LOG.debug("configured API authentification");
 		}
 	}
-	
-	
+
 	@Aspect
 	@Component("APIPasswordFilter")
-	public static class PasswordFilterAspect{
-		
+	public static class PasswordFilterAspect {
+
 		private static String SECURE_PKG_PREFIX = "de.gpue";
-		
-		@AfterReturning(value="execution(* de.gpue.gotissues.controllers.GotIssuesRestController.*(..))",returning="result")
-		public void removePasswordWriteObject(JoinPoint p, Object result){
-			String caller = Thread.currentThread().getStackTrace()[2].getClassName();
-			if(!caller.startsWith(SECURE_PKG_PREFIX))removePassword(result);
+
+		@AfterReturning(value = "execution(* de.gpue.gotissues.controllers.GotIssuesRestController.*(..))", returning = "result")
+		public void removePasswordWriteObject(JoinPoint p, Object result) {
+			String caller = Thread.currentThread().getStackTrace()[2]
+					.getClassName();
+			if (!caller.startsWith(SECURE_PKG_PREFIX))
+				removePassword(result);
 		}
-		
-		public void removePassword(Object o){
-			if(o instanceof Iterable)((Iterable<?>)o).forEach(e -> removePassword(e));
-			if(o instanceof Contributor)removePasswordsFromContributor((Contributor)o);
-			if(o instanceof Contribution)removePasswordsFromContribution((Contribution)o);
-			if(o instanceof Issue)removePasswordsFromIssue((Issue)o);
+
+		public void removePassword(Object o) {
+			if (o instanceof Iterable)
+				((Iterable<?>) o).forEach(e -> removePassword(e));
+			if (o instanceof Contributor)
+				removePasswordsFromContributor((Contributor) o);
+			if (o instanceof Contribution)
+				removePasswordsFromContribution((Contribution) o);
+			if (o instanceof Issue)
+				removePasswordsFromIssue((Issue) o);
 		}
-		
+
 		private void removePasswordsFromContributor(Contributor c) {
 			c.setPassword(null);
 		}

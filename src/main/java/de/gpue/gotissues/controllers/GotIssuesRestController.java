@@ -87,7 +87,7 @@ public class GotIssuesRestController {
 
 		Set<Issue> found = new HashSet<Issue>();
 
-		String searchArr[] = search.split("\\s");
+		String[] searchArr = search.split("\\s");
 		List<String> filters = new LinkedList<String>();
 
 		// build base set
@@ -171,17 +171,17 @@ public class GotIssuesRestController {
 	}
 
 	private List<Issue> orderChildren(List<Issue> todo) {
-		todo = new LinkedList<Issue>(todo);
+		LinkedList<Issue> orderedTodo = new LinkedList<Issue>(todo);
 		List<Issue> result = new LinkedList<Issue>();
 
-		while (!todo.isEmpty()) {
-			Issue head = todo.remove(0);
+		while (!orderedTodo.isEmpty()) {
+			Issue head = orderedTodo.remove(0);
 			result.add(head);
 			List<Issue> children = issues
 					.findByParentOrderByLastChangedDesc(head);
-			todo.removeAll(children);
+			orderedTodo.removeAll(children);
 			result.removeAll(children);
-			todo.addAll(0, children);
+			orderedTodo.addAll(0, children);
 		}
 
 		return result;
@@ -241,7 +241,7 @@ public class GotIssuesRestController {
 
 		Assert.isTrue(i.isOpen(), "Issue is closed!");
 
-		StringBuffer content = new StringBuffer("<ul>");
+		StringBuilder content = new StringBuilder("<ul>");
 
 		if (title != null && !title.equals(i.getTitle())) {
 			content.append("<li><strong>New title: </strong>" + title + "</li>");
@@ -286,6 +286,7 @@ public class GotIssuesRestController {
 			try {
 				dlObj = DATE_FORMAT.parse(deadline);
 			} catch (ParseException e) {
+				e.printStackTrace();
 			}
 
 			if (i.getDeadline() == null) {
@@ -715,8 +716,7 @@ public class GotIssuesRestController {
 
 	@RequestMapping("/contributors/{c}")
 	public Contributor getContributor(@PathVariable("c") String c) {
-		Contributor co = contributors.findOne(c);
-		return co;
+		return contributors.findOne(c);
 	}
 
 	@RequestMapping("/contributors:me")

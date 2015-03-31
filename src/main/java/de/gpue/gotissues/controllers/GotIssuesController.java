@@ -85,7 +85,6 @@ public class GotIssuesController implements ErrorController {
 	@RequestMapping("/contributor/{c}")
 	public String showContributor(@PathVariable("c") String c, Model model) {
 		model.addAttribute("contributor", service.getContributor(c));
-		;
 		return skeleton("/showcontributor", model);
 	}
 
@@ -119,7 +118,7 @@ public class GotIssuesController implements ErrorController {
 
 	private String skeleton(String target, Model model) {
 		Contributor me = null;
-		model.addAttribute("me", (me = service.getMe()));
+		model.addAttribute("me", me = service.getMe());
 		model.addAttribute("issuecount", service.countIssues());
 		model.addAttribute("watchcount", service.getWatchedIssues(me.getName())
 				.size());

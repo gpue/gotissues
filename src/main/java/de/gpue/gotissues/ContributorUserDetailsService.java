@@ -11,8 +11,8 @@ import de.gpue.gotissues.repo.ContributorRepository;
 
 @Configuration("UserDetailsService")
 public class ContributorUserDetailsService implements UserDetailsService {
-	public static GrantedAuthority ADMIN = new GrantedAuthority() {
-		
+	public static final GrantedAuthority ADMIN = new GrantedAuthority() {
+
 		private static final long serialVersionUID = 1L;
 
 		@Override
@@ -20,8 +20,8 @@ public class ContributorUserDetailsService implements UserDetailsService {
 			return "ADMIN";
 		}
 	};
-	public static GrantedAuthority USER = new GrantedAuthority() {
-		
+	public static final GrantedAuthority USER = new GrantedAuthority() {
+
 		private static final long serialVersionUID = 1L;
 
 		@Override
@@ -29,22 +29,21 @@ public class ContributorUserDetailsService implements UserDetailsService {
 			return "USER";
 		}
 	};
-	
+
 	@Autowired
 	private ContributorRepository contributors;
 
 	@Override
-	public Contributor loadUserByUsername(String name)
-			throws UsernameNotFoundException {
+	public Contributor loadUserByUsername(String name) {
 		Contributor c = contributors.findOne(name);
-		if (c!=null)
+		if (c != null)
 			return c;
 		else
 			throw new UsernameNotFoundException("User " + name + " not found!");
 	}
-	
+
 	public ContributorRepository getRepo() {
 		return contributors;
 	}
-	
+
 }
