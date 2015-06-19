@@ -31,6 +31,8 @@ public class Issue {
 	@NotNull
 	private boolean open;
 	@NotNull
+	private boolean visibilityRestricted;
+	@NotNull
 	private Date lastChanged;
 	@ManyToOne
 	private Issue parent;
@@ -49,7 +51,7 @@ public class Issue {
 	}
 
 	public Issue(String title, String description, Date created,
-			Contributor creator, Issue parent) {
+			Contributor creator, Issue parent, boolean visibilityRestricted) {
 		this.title = title;
 		this.description = description;
 		this.created = created;
@@ -58,6 +60,7 @@ public class Issue {
 		this.created = new Date();
 		this.lastChanged = created;
 		this.open = true;
+		this.visibilityRestricted = visibilityRestricted;
 		this.assignees = new HashSet<>();
 		this.watchers = new HashSet<>();
 	}
@@ -104,6 +107,10 @@ public class Issue {
 
 	public boolean isOpen() {
 		return open;
+	}
+	
+	public boolean isVisibilityRestricted() {
+		return visibilityRestricted;
 	}
 
 	public void setOpen(Boolean open) {
@@ -187,6 +194,10 @@ public class Issue {
 		this.open = open;
 	}
 
+	public void setVisibilityRestricted(boolean visibilityRestricted) {
+		this.visibilityRestricted = visibilityRestricted;
+	}
+	
 	@Override
 	public String toString() {
 		return "#" + id + ": " + title;

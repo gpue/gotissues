@@ -16,10 +16,9 @@
 					<select id="parent" name="parent" class="form-control">
 						<option th:if="${parent} != null" th:text="${parent}"
 							th:value="${parent.id}" selected="selected">PARENT</option>
-						<option th:if="${parent} != null" value="-1">No
+						<option th:if="${parent} != null" value="-1">No parent</option>
+						<option th:if="${parent} == null" selected="selected" value="-1">No
 							parent</option>
-						<option th:if="${parent} == null" selected="selected"
-							value="-1">No parent</option>
 						<option th:each="pissue : ${issues}"
 							th:unless="${parent}!=null and ${pissue.equals(parent)}"
 							th:text="${pissue}" th:value="${pissue.id}">PARENT</option>
@@ -29,8 +28,8 @@
 			<div class="form-group">
 				<label for="title" class="col-sm-2 control-label">Title</label>
 				<div class="col-sm-10">
-					<input type="text" class="form-control deactivatable" id="title" name="title"
-						placeholder="My New Issue" required="required"
+					<input type="text" class="form-control deactivatable" id="title"
+						name="title" placeholder="My New Issue" required="required"
 						data-parsley-length="[3,64]" />
 				</div>
 			</div>
@@ -45,6 +44,13 @@
 							th:text="${contributor.name}" th:value="${contributor.name}">Add
 							a contributor...</option>
 					</select>
+				</div>
+			</div>
+			<div class="form-group">
+				<label for="nonpublic" class="col-sm-2 control-label">Non-public</label>
+				<div class="col-sm-10">
+					<input type="checkbox" id="nonpublic" name="nonpublic" aria-label="Only visible to assignees?">
+					</input>
 				</div>
 			</div>
 			<div class="form-group">
@@ -71,8 +77,9 @@
 	<script type="text/javascript" th:inline="javascript">
 		var asgSelect = null;
 		var parentSelect = null;
-		
+
 		$(document).ready(function() {
+			$("#nonpublic").bootstrapSwitch();
 			$('#sndesc').summernote({
 				height : 150
 			});
@@ -80,12 +87,12 @@
 				create : true,
 				sortField : 'text'
 			})[0].selectize;
-			
+
 			parentSelect = $('#parent').selectize({
 				create : true,
 				sortField : 'text'
 			})[0].selectize;
-			
+
 			$('.datepicker').datepicker({
 				startDate : '-0d',
 				weekStart : 1,
@@ -103,9 +110,10 @@
 					title : document.getElementById("title").value,
 					description : $('#sndesc').code(),
 					assignees : $("#select-beast").val(),
-					parent : document.getElementById("parent").value
+					parent : document.getElementById("parent").value,
+					nonpublic: $('#nonpublic').bootstrapSwitch('state')	
 				};
-				
+
 				if (document.getElementById("deadline").length != 0)
 					formData.deadline = document.getElementById("deadline").value;
 
@@ -119,10 +127,10 @@
 				//submit
 				$.ajax({
 					type : "GET",
-					url : baseURL+"/api/issues:add",
+					url : baseURL + "/api/issues:add",
 					data : formData,
 					success : function(data) {
-						window.location.href = baseURL+'/issue/' + data.id;
+						window.location.href = baseURL + '/issue/' + data.id;
 					},
 					error : function() {
 						shout("danger", "Error!",
