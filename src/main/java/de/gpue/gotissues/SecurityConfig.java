@@ -88,7 +88,7 @@ public class SecurityConfig extends GlobalAuthenticationConfigurerAdapter {
 					.formLogin().loginPage("/login")
 					.defaultSuccessUrl("/issuelist", true).permitAll().and()
 					.logout().logoutUrl("/logout").logoutSuccessUrl("/login")
-					.invalidateHttpSession(true);
+					.invalidateHttpSession(true).and().sessionManagement().maximumSessions(1);
 			http.csrf().disable();
 			LOG.debug("configured API authentification");
 		}

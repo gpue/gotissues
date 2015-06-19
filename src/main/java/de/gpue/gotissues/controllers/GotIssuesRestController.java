@@ -156,15 +156,15 @@ public class GotIssuesRestController {
 				found = found.stream().filter(i -> !i.isOpen())
 						.collect(Collectors.toSet());
 			}
-
-			// filter by visibility
-			found = found
-					.stream()
-					.filter(i -> !i.isVisibilityRestricted()
-							|| getMe().isAdmin()
-							|| i.getAssignees().contains(getMe()))
-					.collect(Collectors.toSet());
 		}
+		
+		// filter by visibility
+		found = found
+				.stream()
+				.filter(i -> !i.isVisibilityRestricted()
+						|| getMe().isAdmin()
+						|| i.getAssignees().contains(getMe()))
+				.collect(Collectors.toSet());
 
 		List<Issue> result = new ArrayList<Issue>(found);
 		result.sort(new Comparator<Issue>() {
@@ -203,7 +203,8 @@ public class GotIssuesRestController {
 				|| found.getAssignees().contains(getMe())) {
 			return found;
 		}
-		return null;
+		throw new AccessDeniedException(
+				"You are not allowed to acces this issue!");
 	}
 
 	@RequestMapping(value = "/issues:add", method = { RequestMethod.GET,
