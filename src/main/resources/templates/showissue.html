@@ -116,6 +116,17 @@
 								</div>
 							</div>
 							<div class="form-group">
+								<label for="nonpublic" class="col-sm-2 control-label">Non-public</label>
+								<div class="col-sm-10">
+									<input type="checkbox" id="nonpublic" name="nonpublic"
+										aria-label="Only visible to assignees?" checked="checked"
+										th:if="${issue.visibilityRestricted}"></input><input
+										type="checkbox" id="nonpublic" name="nonpublic"
+										aria-label="Only visible to assignees?" 
+										th:if="${issue.visibilityRestricted} == false"></input>
+								</div>
+							</div>
+							<div class="form-group">
 								<label for="deadline" class="col-sm-2 control-label">Deadline</label>
 								<div class="col-sm-10">
 									<input class="datepicker form-control deactivatable"
@@ -142,7 +153,8 @@
 					</div>
 					<div role="tabpanel" class="tab-pane" id="process"
 						th:if="${issue.processCode} != null and ${issue.isOpen()}">
-						<div class="container col-sm-10" style="padding: 40px" id="procform"></div>
+						<div class="container col-sm-10" style="padding: 40px"
+							id="procform"></div>
 						<script type="text/javascript" th:inline="javascript">
 							var strState = /*[[${issue.processState}]]*/'{}';
 							Proclib.netstate = JSON.parse(strState);
@@ -206,6 +218,8 @@
 
 		$(document).ready(
 				function() {
+					$("#nonpublic").bootstrapSwitch();
+					
 					Proclib.prepare();
 
 					asgSelect = $('#select-beast').selectize({
@@ -237,7 +251,7 @@
 
 					$.ajax({
 						type : "GET",
-						url : baseURL+'/api/issues/' + issue,
+						url : baseURL + '/api/issues/' + issue,
 						success : function(data) {
 							updateOptions(data);
 						},
@@ -250,7 +264,7 @@
 		function addContributions() {
 			$.ajax({
 				type : "GET",
-				url : baseURL+'/api/issues/' + issue + '/contributions',
+				url : baseURL + '/api/issues/' + issue + '/contributions',
 				data : {
 					page : pageNum
 				},
@@ -333,7 +347,7 @@
 		function watch() {
 			$.ajax({
 				type : "GET",
-				url : baseURL+'/api/issues/' + issue + ':watch',
+				url : baseURL + '/api/issues/' + issue + ':watch',
 				success : function(data) {
 					updateOptions(data);
 				},
@@ -345,7 +359,7 @@
 		function unwatch() {
 			$.ajax({
 				type : "GET",
-				url : baseURL+'/api/issues/' + issue + ':unwatch',
+				url : baseURL + '/api/issues/' + issue + ':unwatch',
 				success : function(data) {
 					updateOptions(data);
 				},
@@ -357,7 +371,7 @@
 		function close() {
 			$.ajax({
 				type : "GET",
-				url : baseURL+'/api/issues/' + issue + ':close',
+				url : baseURL + '/api/issues/' + issue + ':close',
 				success : function(data) {
 					window.location.reload();
 				},
@@ -369,7 +383,7 @@
 		function open() {
 			$.ajax({
 				type : "GET",
-				url : baseURL+'/api/issues/' + issue + ':open',
+				url : baseURL + '/api/issues/' + issue + ':open',
 				success : function(data) {
 					window.location.reload();
 				},
@@ -385,7 +399,8 @@
 					title : document.getElementById("title").value,
 					description : $('#sndesc').code(),
 					assignees : $("#select-beast").val(),
-					parent : document.getElementById("parent").value
+					parent : document.getElementById("parent").value,
+					nonpublic: $('#nonpublic').bootstrapSwitch('state')				
 				};
 
 				if (document.getElementById("deadline").length != 0)
@@ -393,7 +408,7 @@
 
 				$.ajax({
 					type : "GET",
-					url : baseURL+'/api/issues/' + issue + ':alter',
+					url : baseURL + '/api/issues/' + issue + ':alter',
 					data : formData,
 					success : function(data) {
 						window.location.reload();
@@ -416,7 +431,7 @@
 
 			$.ajax({
 				type : "GET",
-				url : baseURL+'/api/issues/' + issue + ':contribute',
+				url : baseURL + '/api/issues/' + issue + ':contribute',
 				data : formData,
 				success : function(data) {
 					window.location.reload();

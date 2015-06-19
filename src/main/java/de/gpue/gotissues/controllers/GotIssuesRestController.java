@@ -17,6 +17,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.util.Assert;
@@ -66,7 +67,7 @@ public class GotIssuesRestController {
 
 	@Value("${gotissues.baseurl}")
 	private String baseURL = "";
-	
+
 	public String getBaseURL() {
 		return baseURL;
 	}
@@ -155,6 +156,14 @@ public class GotIssuesRestController {
 				found = found.stream().filter(i -> !i.isOpen())
 						.collect(Collectors.toSet());
 			}
+
+			// filter by visibility
+			found = found
+					.stream()
+					.filter(i -> !i.isVisibilityRestricted()
+							|| getMe().isAdmin()
+							|| i.getAssignees().contains(getMe()))
+					.collect(Collectors.toSet());
 		}
 
 		List<Issue> result = new ArrayList<Issue>(found);
@@ -189,7 +198,12 @@ public class GotIssuesRestController {
 
 	@RequestMapping("/issues/{i}")
 	public Issue getIssue(@PathVariable("i") Long id) {
-		return issues.findOne(id);
+		Issue found = issues.findOne(id);
+		if (getMe().isAdmin() || !found.isVisibilityRestricted()
+				|| found.getAssignees().contains(getMe())) {
+			return found;
+		}
+		return null;
 	}
 
 	@RequestMapping(value = "/issues:add", method = { RequestMethod.GET,
@@ -199,12 +213,13 @@ public class GotIssuesRestController {
 			@RequestParam(value = "description", defaultValue = "") String description,
 			@RequestParam(value = "parent", required = false) Long parent,
 			@RequestParam(value = "assignees[]", required = false) List<String> assignees,
-			@RequestParam(value = "deadline", required = false) String deadline)
+			@RequestParam(value = "deadline", required = false) String deadline,
+			@RequestParam(value = "nonpublic", required = false, defaultValue = "false") Boolean visibilityRestricted)
 			throws ParseException {
 		final Issue i = new Issue(title, description, new Date(),
 				contributors.findOne(getMe().getUsername()),
 				(parent != null && parent != PARENT_NONE) ? getIssue(parent)
-						: null);
+						: null, visibilityRestricted);
 
 		if (deadline != null && deadline != "")
 			i.setDeadline(DATE_FORMAT.parse(deadline));
@@ -233,11 +248,15 @@ public class GotIssuesRestController {
 			@RequestParam(value = "parent", required = false) Long parent,
 			@RequestParam(value = "description", required = false) String description,
 			@RequestParam(value = "deadline", required = false) String deadline,
-			@RequestParam(value = "assignees[]", required = false) List<String> assignees) {
+			@RequestParam(value = "assignees[]", required = false) List<String> assignees,
+			@RequestParam(value = "nonpublic", required = false) Boolean visibilityRestricted) {
 		Issue i = issues.findOne(id);
 
-		if (title == null && description == null)
-			return i;
+		if (!getMe().isAdmin() && i.isVisibilityRestricted()
+				&& !i.getAssignees().contains(getMe())) {
+			throw new AccessDeniedException(
+					"You are not allowed to acces this issue!");
+		}
 
 		Assert.isTrue(i.isOpen(), "Issue is closed!");
 
@@ -246,6 +265,9 @@ public class GotIssuesRestController {
 		if (title != null && !title.equals(i.getTitle())) {
 			content.append("<li><strong>New title: </strong>" + title + "</li>");
 			i.setTitle(title);
+		}
+		if (visibilityRestricted != null) {
+			i.setVisibilityRestricted(visibilityRestricted);
 		}
 		if (parent != null) {
 			if (parent == PARENT_NONE) {
@@ -370,8 +392,8 @@ public class GotIssuesRestController {
 		StringBuilder b = new StringBuilder();
 		b.append("<ul>");
 
-		assignees.forEach(a -> b.append("<li><a href=\""+baseURL+"/contributor/" + a
-				+ "\">" + a + "</a></li>"));
+		assignees.forEach(a -> b.append("<li><a href=\"" + baseURL
+				+ "/contributor/" + a + "\">" + a + "</a></li>"));
 
 		b.append("</ul>");
 
@@ -382,6 +404,12 @@ public class GotIssuesRestController {
 			RequestMethod.POST })
 	public Issue closeIssue(@PathVariable("i") Long id) {
 		Issue i = issues.findOne(id);
+
+		if (!getMe().isAdmin() && i.isVisibilityRestricted()
+				&& !i.getAssignees().contains(getMe())) {
+			throw new AccessDeniedException(
+					"You are not allowed to acces this issue!");
+		}
 
 		contribute(getMe() + " closed issue " + i, "<h4>Issue closed.</h4>",
 				id, getMe().getName(), false, 1);
@@ -400,6 +428,12 @@ public class GotIssuesRestController {
 			RequestMethod.POST })
 	public Issue openIssue(@PathVariable("i") Long id) {
 		Issue i = issues.findOne(id);
+
+		if (!getMe().isAdmin() && i.isVisibilityRestricted()
+				&& !i.getAssignees().contains(getMe())) {
+			throw new AccessDeniedException(
+					"You are not allowed to acces this issue!");
+		}
 
 		i.setOpen(true);
 
@@ -474,6 +508,11 @@ public class GotIssuesRestController {
 		for (Object or : CollectionUtils.union(c.getIssue().getAssignees(), c
 				.getIssue().getWatchers())) {
 			Contributor r = (Contributor) or;
+
+			if (c.getIssue().isVisibilityRestricted() && !r.isAdmin()
+					&& !c.getIssue().getAssignees().contains(r))
+				continue;
+
 			try {
 				MailUtil.sendHTMLMail(notifierMail, r.getMail(), mailSubject,
 						content);
@@ -692,7 +731,13 @@ public class GotIssuesRestController {
 
 	@RequestMapping("/contributors/{c}/watched")
 	public List<Issue> getWatchedIssues(@PathVariable("c") String c) {
-		return issues.findByWatchers(getContributor(c));
+		return issues
+				.findByWatchers(getContributor(c))
+				.stream()
+				.filter(i -> getMe().isAdmin() || !i.isVisibilityRestricted()
+						|| i.getAssignees().contains(getMe())
+
+				).collect(Collectors.toList());
 	}
 
 	@RequestMapping("/contributors/{c}/assigned")
@@ -704,14 +749,23 @@ public class GotIssuesRestController {
 	public List<Contribution> getContributionsByContributor(
 			@PathVariable("c") String c,
 			@RequestParam(value = "page", required = false) Integer page) {
+		List<Contribution> found = null;
+
 		if (page != null) {
-			return contributions.findByContributorOrderByCreatedDesc(
+			found = contributions.findByContributorOrderByCreatedDesc(
 					getContributor(c), new PageRequest(page - 1, PAGE_SIZE))
 					.getContent();
 		} else {
-			return contributions
+			found = contributions
 					.findByContributorOrderByCreatedDesc(getContributor(c));
 		}
+
+		return found
+				.stream()
+				.filter(co -> getMe().isAdmin()
+						|| !co.getIssue().isVisibilityRestricted()
+						|| co.getIssue().getAssignees().contains(getMe()))
+				.collect(Collectors.toList());
 	}
 
 	@RequestMapping("/contributors/{c}")
@@ -755,7 +809,7 @@ public class GotIssuesRestController {
 		pd.setName(name);
 		return processes.save(pd);
 	}
-	
+
 	@RequestMapping(value = "/processes/{p}:delete", method = {
 			RequestMethod.GET, RequestMethod.POST })
 	public void deleteProcess(@PathVariable("p") Long id) {
@@ -768,11 +822,12 @@ public class GotIssuesRestController {
 			@RequestParam("parent") Long parent,
 			@RequestParam("title") String title) {
 		ProcessDescription pd = processes.findOne(id);
-		
+
 		Issue i = null;
 		try {
 			i = addIssue(title, "", parent,
-					Arrays.asList(new String[] { getMe().getName() }), null);
+					Arrays.asList(new String[] { getMe().getName() }), null,
+					false);
 		} catch (ParseException e) {
 			e.printStackTrace();
 		}
@@ -791,13 +846,11 @@ public class GotIssuesRestController {
 			@RequestParam("state") String state) {
 		Issue i = issues.findOne(id);
 		i.setProcessState(state);
-		
-		System.err.println("Saving issue #"+id+" with state "+state);
-		
+
+		System.err.println("Saving issue #" + id + " with state " + state);
+
 		i = issues.save(i);
 		return i;
 	}
-	
-	
 
 }
