@@ -213,7 +213,7 @@ function timelineEntry(cdata) {
 	x.setAttribute("class", "time fa fa-clock-o");
 	x
 			.appendChild(txt(' '
-					+ $.format.date(cdata.created, 'dd.MM.yyyy hh:mm:ss')));
+					+ $.format.date(cdata.created, 'dd.MM.yyyy HH:mm:ss')));
 	wrap.appendChild(x);
 	x = document.createElement('H4');
 	x.appendChild(userlink(cdata.contributor.name));
