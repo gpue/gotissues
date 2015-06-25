@@ -484,7 +484,7 @@ public class GotIssuesRestController {
 			RequestMethod.GET, RequestMethod.POST })
 	public Contribution contribute(
 			@RequestParam(value = "content", defaultValue = "") String content,
-			@RequestParam("issue") Long issue) {
+			@PathVariable("i") Long issue) {
 		return contribute(
 				getMe().getName() + " contributed to issue #" + issue, content,
 				issue, getMe().getName(), true, 3);

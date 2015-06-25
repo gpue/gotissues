@@ -192,7 +192,7 @@
 															data-parsley-validate="true" id="issueform">
 															<div id="sncontrib" class="summernote"></div>
 															<br />
-															<button type="button" onclick="javascript:contribute()"
+															<button type="button" onclick="javascript:contributeFromForm()"
 																class="btn btn-primary fa fa-check validate submit">&nbsp;Contribute</button>
 														</form>
 													</div>
@@ -419,14 +419,13 @@
 			}
 		}
 
-		function contribute() {
+		function contributeFromForm() {
 			contribute($('#sncontrib').code());
 		}
 
 		function contribute(c) {
 			var formData = {
-				content : c,
-				issue : issue
+				content : c
 			};
 
 			$.ajax({
