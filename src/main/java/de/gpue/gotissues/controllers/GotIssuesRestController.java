@@ -191,7 +191,7 @@ public class GotIssuesRestController {
 		return orderChildren(result,filter);
 	}
 
-	private List<Issue> orderChildren(List<Issue> todo,Predicate filter) {//TODO filter?
+	private List<Issue> orderChildren(List<Issue> todo,Predicate<Issue> filter) {//TODO filter?
 		LinkedList<Issue> orderedTodo = new LinkedList<Issue>(todo);
 		List<Issue> result = new LinkedList<Issue>();
 
