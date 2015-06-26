@@ -31,6 +31,8 @@ public class Issue {
 	@NotNull
 	private boolean open;
 	@NotNull
+	private boolean archived;
+	@NotNull
 	private boolean visibilityRestricted;
 	@NotNull
 	private Date lastChanged;
@@ -63,6 +65,7 @@ public class Issue {
 		this.visibilityRestricted = visibilityRestricted;
 		this.assignees = new HashSet<>();
 		this.watchers = new HashSet<>();
+		this.archived = false;
 	}
 
 	public Long getId() {
@@ -111,6 +114,10 @@ public class Issue {
 	
 	public boolean isVisibilityRestricted() {
 		return visibilityRestricted;
+	}
+	
+	public boolean isArchived() {
+		return archived;
 	}
 
 	public void setOpen(Boolean open) {
@@ -196,6 +203,10 @@ public class Issue {
 
 	public void setVisibilityRestricted(boolean visibilityRestricted) {
 		this.visibilityRestricted = visibilityRestricted;
+	}
+	
+	public void setArchived(boolean archived) {
+		this.archived = archived;
 	}
 	
 	@Override

@@ -13,6 +13,7 @@
 			<thead>
 				<tr>
 					<th>Issue</th>
+					<th></th>
 					<th>Latest activity</th>
 					<th>Deadline</th>
 					<th>State</th>
@@ -110,9 +111,10 @@
 
 			return tr(idata.id, parentId, [
 					td(issuelink(idata.id, idata.title)),
+					td(childlink(idata.id)),
 					td(txt($.format.date(idata.lastChanged,
 							'dd.MM.yyyy HH:mm:ss'))), td(deadline),
-					td(state(idata.open)), td(childlink(idata.id)) ]);
+					td(state(idata.open)), td(archivelink(idata.id,idata.archived)) ]);
 		}
 	</script>
 </body>

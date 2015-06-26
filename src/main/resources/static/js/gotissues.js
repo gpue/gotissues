@@ -71,7 +71,7 @@ function deleteContribution(c) {
 		type : "GET",
 		url : baseURL+'/api/contributions/' + c + ':delete',
 		success : function(data) {
-			window.location.reload();
+			window.location.href = "/issuelist";
 		},
 		error : function() {
 			shout("error", "Error!", "Deleting contribution failed.");
@@ -90,6 +90,25 @@ function deleteIssue(i) {
 		},
 		error : function(jqxhr, status, msg) {
 			shout("error", "Error!", "Deleting issue failed.");
+		},
+		dataType : "json",
+		contentType : "application/json"
+	});
+};
+
+function archive(i,archive) {
+	var cmd = 'unarchive';
+	if(archive){
+		cmd = 'archive';
+	}
+	$.ajax({
+		type : "GET",
+		url : baseURL+'/api/issues/' + i + ':' + cmd,
+		success : function(data) {
+			window.location.reload();
+		},
+		error : function(jqxhr, status, msg) {
+			shout("error", "Error!", "(Un)archiving issue failed.");
 		},
 		dataType : "json",
 		contentType : "application/json"
@@ -182,6 +201,18 @@ function issuelink(id, title) {
 	var a = document.createElement('A');
 	a.href = baseURL+'/issue/' + id;
 	a.appendChild(txt('#' + id + ' ' + title));
+	return a;
+}
+
+function archivelink(id, archived) {
+	var a = document.createElement('A');
+	if(!archived){
+		a.href = 'javascript:archive('+id+',true)';
+		a.appendChild(txt('Archive'));
+	} else {
+		a.href = 'javascript:archive('+id+',false)';
+		a.appendChild(txt('Un-archive'));
+	}
 	return a;
 }
 

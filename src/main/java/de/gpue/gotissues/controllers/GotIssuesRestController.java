@@ -4,13 +4,16 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -45,6 +48,7 @@ public class GotIssuesRestController {
 	private static final String ASSIGNED = "@assigned:";
 	private static final String OPEN = "@open";
 	private static final String CLOSED = "@closed";
+	private static final String ARCHIVED = "@archived";
 
 	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat(
 			"dd.MM.yyyy");
@@ -102,7 +106,7 @@ public class GotIssuesRestController {
 				Long id = Long.parseLong(ids);
 				Issue i = issues.findOne(id);
 				if (i != null) {
-					return orderChildren(Arrays.asList(i));
+					return orderChildren(Arrays.asList(i), p->true);
 				}
 			}
 
@@ -123,7 +127,7 @@ public class GotIssuesRestController {
 			}
 
 			if (s.startsWith(WATCHED) || s.startsWith(ASSIGNED)
-					|| s.equals(OPEN) || s.equals(CLOSED))
+					|| s.equals(OPEN) || s.equals(CLOSED) || s.equals(ARCHIVED))
 				filters.add(s);
 		}
 
@@ -131,40 +135,48 @@ public class GotIssuesRestController {
 			found.addAll(issues.findByTitleContainingOrDescriptionContaining(
 					"", ""));
 
+		boolean archived = false;
+		for (String f : filters) {
+			if (f.equals(ARCHIVED)) {
+				archived = true;
+				break;
+			}
+		}
+		
+		Predicate<Issue> filter = i -> true;
+
+		if (!archived) {
+			filter = filter.and(i -> !i.isArchived());
+		} else {
+			filter = filter.and(i -> i.isArchived());
+		}
+
 		// filter
 		for (String f : filters) {
 			if (f.startsWith(WATCHED)) {
 				String cn = f.substring(WATCHED.length());
-				Contributor c = contributors.findOne(cn);
+				final Contributor c = contributors.findOne(cn);
 				if (c != null) {
-					found = found.stream()
-							.filter(i -> i.getWatchers().contains(c))
-							.collect(Collectors.toSet());
+					filter = filter.and(i -> i.getWatchers().contains(c));
 				}
 			} else if (f.startsWith(ASSIGNED)) {
 				String cn = f.substring(ASSIGNED.length());
-				Contributor c = contributors.findOne(cn);
+				final Contributor c = contributors.findOne(cn);
 				if (c != null) {
-					found = found.stream()
-							.filter(i -> i.getAssignees().contains(c))
-							.collect(Collectors.toSet());
+					filter = filter.and(i -> i.getAssignees().contains(c));
 				}
 			} else if (f.equals(OPEN)) {
-				found = found.stream().filter(i -> i.isOpen())
-						.collect(Collectors.toSet());
+				filter = filter.and(i -> i.isOpen());
 			} else if (f.equals(CLOSED)) {
-				found = found.stream().filter(i -> !i.isOpen())
-						.collect(Collectors.toSet());
+				filter = filter.and(i -> !i.isOpen());
 			}
 		}
-		
+
 		// filter by visibility
-		found = found
-				.stream()
-				.filter(i -> !i.isVisibilityRestricted()
-						|| getMe().isAdmin()
-						|| i.getAssignees().contains(getMe()))
-				.collect(Collectors.toSet());
+		filter = filter.and(i -> !i.isVisibilityRestricted() || getMe().isAdmin()
+				|| i.getAssignees().contains(getMe()));
+		
+		found = found.stream().filter(filter).collect(Collectors.toSet());
 
 		List<Issue> result = new ArrayList<Issue>(found);
 		result.sort(new Comparator<Issue>() {
@@ -176,10 +188,10 @@ public class GotIssuesRestController {
 
 		});
 
-		return orderChildren(result);
+		return orderChildren(result,filter);
 	}
 
-	private List<Issue> orderChildren(List<Issue> todo) {
+	private List<Issue> orderChildren(List<Issue> todo,Predicate filter) {//TODO filter?
 		LinkedList<Issue> orderedTodo = new LinkedList<Issue>(todo);
 		List<Issue> result = new LinkedList<Issue>();
 
@@ -187,7 +199,7 @@ public class GotIssuesRestController {
 			Issue head = orderedTodo.remove(0);
 			result.add(head);
 			List<Issue> children = issues
-					.findByParentOrderByLastChangedDesc(head);
+					.findByParentOrderByLastChangedDesc(head).stream().filter(filter).collect(Collectors.toList());
 			orderedTodo.removeAll(children);
 			result.removeAll(children);
 			orderedTodo.addAll(0, children);
@@ -267,8 +279,11 @@ public class GotIssuesRestController {
 			content.append("<li><strong>New title: </strong>" + title + "</li>");
 			i.setTitle(title);
 		}
-		if (visibilityRestricted != null) {
-			i.setVisibilityRestricted(visibilityRestricted);
+		if (visibilityRestricted != i.isVisibilityRestricted()) {
+			content.append("<li><strong>Visibility changed to: </strong>" + (
+						visibilityRestricted ? "assignees" : "all"
+					) + "</li>");
+			restrictVisibility(i.getId(), visibilityRestricted);
 		}
 		if (parent != null) {
 			if (parent == PARENT_NONE) {
@@ -295,7 +310,7 @@ public class GotIssuesRestController {
 					i.setParent(newParent);
 				}
 			}
-			List<Issue> descendants = orderChildren(Arrays.asList(i));
+			List<Issue> descendants = orderChildren(Arrays.asList(i),p->true);
 			Assert.isTrue(!descendants.contains(i.getParent()),
 					"A descendant cannot be a parent!");
 		}
@@ -401,10 +416,36 @@ public class GotIssuesRestController {
 		return b.toString();
 	}
 
+	private Set<Issue> findAncestors(Issue i) {
+		Set<Issue> result = new HashSet<Issue>();
+		Issue current = i;
+		while (current.getParent() != null) {
+			result.add(current.getParent());
+			current = current.getParent();
+		}
+		return result;
+	}
+
+	private Set<Issue> findDescandants(Issue i) {
+		Set<Issue> result = new HashSet<Issue>();
+		Queue<Issue> todo = new LinkedList<Issue>();
+		todo.add(i);
+		while (!todo.isEmpty()) {
+			Issue current = todo.poll();
+			if (current != i)
+				result.add(current);
+			todo.addAll(issues.findByParentOrderByLastChangedDesc(current));
+		}
+		return result;
+	}
+
 	@RequestMapping(value = "/issues/{i}:close", method = { RequestMethod.GET,
 			RequestMethod.POST })
 	public Issue closeIssue(@PathVariable("i") Long id) {
 		Issue i = issues.findOne(id);
+
+		if (!i.isOpen())
+			return i;
 
 		if (!getMe().isAdmin() && i.isVisibilityRestricted()
 				&& !i.getAssignees().contains(getMe())) {
@@ -419,8 +460,7 @@ public class GotIssuesRestController {
 
 		issues.save(i);
 
-		issues.findByParentOrderByLastChangedDesc(i).forEach(
-				ic -> closeIssue(ic.getId()));
+		findAncestors(i).forEach(ic -> closeIssue(ic.getId()));
 
 		return i;
 	}
@@ -429,6 +469,9 @@ public class GotIssuesRestController {
 			RequestMethod.POST })
 	public Issue openIssue(@PathVariable("i") Long id) {
 		Issue i = issues.findOne(id);
+
+		if (i.isOpen())
+			return i;
 
 		if (!getMe().isAdmin() && i.isVisibilityRestricted()
 				&& !i.getAssignees().contains(getMe())) {
@@ -443,8 +486,7 @@ public class GotIssuesRestController {
 		contribute(getMe() + " re-opened issue " + i,
 				"<h4>Issue re-opened.</h4>", id, getMe().getName(), false, 1);
 
-		if (i.getParent() != null)
-			openIssue(i.getParent().getId());
+		findDescandants(i).forEach(p -> openIssue(p.getId()));
 
 		return i;
 	}
@@ -458,6 +500,46 @@ public class GotIssuesRestController {
 		i.getWatchers().add(getMe());
 
 		issues.save(i);
+
+		return i;
+	}
+
+	public void restrictVisibility(Long id, boolean restrict) {
+		Issue i = issues.findOne(id);
+
+		i.setVisibilityRestricted(restrict);
+
+		issues.save(i);
+		
+		if(restrict)
+			findAncestors(i).forEach(a -> restrictVisibility(a.getId(),restrict));
+		else 
+			findDescandants(i).forEach(a -> restrictVisibility(a.getId(),restrict));
+
+	}
+
+	@RequestMapping("/issues/{i}:archive")
+	public Issue archiveIssue(@PathVariable("i") Long id) {
+		Issue i = issues.findOne(id);
+
+		i.setArchived(true);
+
+		issues.save(i);
+		
+		findDescandants(i).forEach(a -> archiveIssue(a.getId()));
+
+		return i;
+	}
+
+	@RequestMapping("/issues/{i}:unarchive")
+	public Issue unarchiveIssue(@PathVariable("i") Long id) {
+		Issue i = issues.findOne(id);
+
+		i.setArchived(false);
+
+		issues.save(i);
+		
+		findAncestors(i).forEach(a -> unarchiveIssue(a.getId()));
 
 		return i;
 	}
