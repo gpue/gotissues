@@ -84,7 +84,6 @@
 				$(document).ready(function() {
 					var urlArr = window.location.href.split("/");
 					if (urlArr[urlArr.length - 1] != 'createaccount') {
-						document.getElementById("generate").style.display = "none";
 						contributor = urlArr[urlArr.length - 1];
 						$.ajax({
 							type : "GET",
