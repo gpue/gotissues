@@ -17,6 +17,8 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.RandomUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
@@ -749,10 +751,31 @@ public class GotIssuesRestController {
 
 		Assert.isTrue(getMe().isAdmin(), "Only admin can do this!");
 
+		boolean generatedPwd = false;
+		if(password == null || password.length()==0){
+			password = RandomStringUtils.randomAlphanumeric(RandomUtils.nextInt(8, 12));
+			generatedPwd = true;
+		}
+		
 		Contributor c = new Contributor(name, fullname, mail,
 				encoder.encode(password));
 
 		contributors.save(c);
+		
+		if(generatedPwd){
+			try {
+				MailUtil.sendHTMLMail(notifierMail, c.getMail(), "Invitation to gotissues",
+						"Hello "+c.getFullName()+",\n\n"
+								+ "you have been invited to join our issue tracker gotissues on "+getBaseURL()
+								+ ". The followong credentials are set for your account:\n\n"
+								+ "Username: "+c.getName()
+								+ "\nPassword: "+password
+								+ "\n\nPlease set your individual password after login for security reasons.\n\n"
+								+ "Sincerely,\n"+getMe().getName());
+			} catch (Exception e) {
+				System.err.println(e);
+			}
+		}
 
 		return getContributor(name);
 	}
