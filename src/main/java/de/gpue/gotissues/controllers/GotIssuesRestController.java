@@ -570,7 +570,8 @@ public class GotIssuesRestController {
 			@RequestParam(value = "content", defaultValue = "") String content,
 			@PathVariable("i") Long issue) {
 		return contribute(
-				getMe().getName() + " contributed to issue #" + issue, content,
+				getMe().getName() + " contributed to issue #" + issue, content+"\n\n"
+				+"Link to issue: "+getBaseURL()+"/issues/"+issue,
 				issue, getMe().getName(), true, 3);
 	}
 
