@@ -1,9 +1,10 @@
 gotissues
 =========
 
+[ ![Codeship Status for gpue/gotissues](https://codeship.com/projects/f6a49b20-058f-0134-8354-6e0165e195ed/status?branch=master)](https://codeship.com/projects/154462)
+
 A tiny issue tracker based on the Spring framework. It supports the work organization of groups of people and comes with some special features that make gotissues unique:
 
- 
 * web-based, responsive user interface
 * tree-structured issues (you can have sub-issues)
 * human-centered issue content (not code-centered)
